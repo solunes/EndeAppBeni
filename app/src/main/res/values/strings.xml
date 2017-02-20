@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Ende Beni</string>
+    <string name="action_logout">Salir</string>
+    <string name="admin_activity">Administrador</string>
+    <string name="menu_search">Buscar</string>
+    <string name="action_select_search">seleccion de busqueda</string>
+    <string name="re_print">Reimprimir</string>
+    <string name="menu_print">Estado de Impresora</string>
+    <string name="seed">(;(3#Lz5TDLY)bqR</string>
+
+    <string name="admin_nombre">admin</string>
+    <string name="admin_password">1234</string>
+    <string name="action_import">Importar</string>
+    <string name="action_export">Exportar</string>
+</resources>
