@@ -752,8 +752,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             }
             totalSuministroTap = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 153, totalSuministroTap);
             double totalSuministroAseo = 0;
-            if (resSuministroTap.second > 0) {
-                totalSuministroAseo = GenLecturas.totalSuministroAseo(dataModel, getContext(), dataModel.getTlxConsumo(), importeConsumo);
+            if (resSuministroTap.second < 0) {
+                totalSuministroAseo = GenLecturas.totalSuministroAseo(dataModel, getContext(), importeConsumo);
                 if (totalSuministroAseo == -1) {
                     Toast.makeText(getContext(), "No hay tarifa para el aseo", Toast.LENGTH_LONG).show();
                     return false;
@@ -920,6 +920,11 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             @Override
             public void error() {
                 Snackbar.make(inputPotenciaReading, "Error al exportar a SD", Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void noSD() {
+                Snackbar.make(inputPotenciaReading, "No se encuentra una tarjeta SD", Snackbar.LENGTH_SHORT).show();
             }
         });
     }

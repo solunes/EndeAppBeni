@@ -28,23 +28,31 @@ public class FileUtils {
 
     public static void exportDB(Context context, String data, FileUtilsCallback fileUtilsCallback) {
         String internalStorage = getExternalPath(context);
-        boolean copyDB = copyFile(DATABSE_STORAGE + "/" + DBHelper.DATABASE_NAME, internalStorage, DBHelper.DATABASE_NAME);
-        boolean copySP = copyFile(internalStorage + "/" + SHARED_PREFERENCES_NAME, data);
-        if (copyDB && copySP) {
-            fileUtilsCallback.suceess();
+        if (internalStorage != null) {
+            boolean copyDB = copyFile(DATABSE_STORAGE + "/" + DBHelper.DATABASE_NAME, internalStorage, DBHelper.DATABASE_NAME);
+            boolean copySP = copyFile(internalStorage + "/" + SHARED_PREFERENCES_NAME, data);
+            if (copyDB && copySP) {
+                fileUtilsCallback.suceess();
+            } else {
+                fileUtilsCallback.error();
+            }
         } else {
-            fileUtilsCallback.error();
+            fileUtilsCallback.noSD();
         }
     }
 
     public static void importDB(Context context, FileUtilsCallback fileUtilsCallback) {
         String internalStorage = getExternalPath(context);
-        boolean copyDB = copyFile(internalStorage + "/" + DBHelper.DATABASE_NAME, DATABSE_STORAGE, DBHelper.DATABASE_NAME);
-        boolean copySP = copyFile(internalStorage + "/" + SHARED_PREFERENCES_NAME, context);
-        if (copyDB && copySP) {
-            fileUtilsCallback.suceess();
+        if (internalStorage != null) {
+            boolean copyDB = copyFile(internalStorage + "/" + DBHelper.DATABASE_NAME, DATABSE_STORAGE, DBHelper.DATABASE_NAME);
+            boolean copySP = copyFile(internalStorage + "/" + SHARED_PREFERENCES_NAME, context);
+            if (copyDB && copySP) {
+                fileUtilsCallback.suceess();
+            } else {
+                fileUtilsCallback.error();
+            }
         } else {
-            fileUtilsCallback.error();
+            fileUtilsCallback.noSD();
         }
     }
 
@@ -127,12 +135,12 @@ public class FileUtils {
     }
 
     private static String getExternalPath(Context context) {
-        File file = new File("/storage/");
         String path = null;
         for (File f : context.getExternalFilesDirs(null)) {
-            if (Environment.isExternalStorageRemovable(f.getAbsoluteFile())) {
-                Log.e(TAG, "onCreate: " + f.getAbsolutePath());
-                path = f.getAbsolutePath();
+            if (f != null) {
+                if (Environment.isExternalStorageRemovable(f.getAbsoluteFile())) {
+                    path = f.getAbsolutePath();
+                }
             }
         }
         return path;
@@ -142,5 +150,7 @@ public class FileUtils {
         void suceess();
 
         void error();
+
+        void noSD();
     }
 }

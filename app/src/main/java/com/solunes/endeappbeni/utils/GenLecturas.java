@@ -165,7 +165,7 @@ public class GenLecturas {
         DBAdapter dbAdapter = new DBAdapter(context);
         Pair<Double, Integer> valorTAP = null;
         if (dataModel.getTlxTap() != 0) {
-            valorTAP = dbAdapter.getValorTAP(1, 1, importeConsumo);
+            valorTAP = dbAdapter.getValorTAP(dataModel.getTlxRutA(), importeConsumo);
         }
         dbAdapter.close();
         return valorTAP;
@@ -174,16 +174,15 @@ public class GenLecturas {
     /**
      * Calcula la tarifa del aseo.
      *
-     * @param dataModel  un objeto DataModel para obtener datos y hacer una consulta a la base de datos
-     * @param context    contexto de la aplicacion
-     * @param kWhConsumo los Kwh de consumo
+     * @param dataModel un objeto DataModel para obtener datos y hacer una consulta a la base de datos
+     * @param context   contexto de la aplicacion
      * @return si hay aseo, se obtiene la tarifa de aseo de la tabla tarifa_aseo, si no hay se devuelve 0
      */
-    public static double totalSuministroAseo(DataModel dataModel, Context context, int kWhConsumo, double importeConsumo) {
+    public static double totalSuministroAseo(DataModel dataModel, Context context, double importeConsumo) {
         DBAdapter dbAdapter = new DBAdapter(context);
         double importeAseo = 0;
         if (dataModel.getTlxCotaseo() != 0) {
-            importeAseo = dbAdapter.getImporteAseo(dataModel.getTlxCtgAseo(), dataModel.getTlxConsFacturado(), importeConsumo, 1, UserPreferences.getInt(context, AdminActivity.KEY_AREA), 1);
+            importeAseo = dbAdapter.getImporteAseo(dataModel.getTlxRutA(), dataModel.getTlxCtgAseo(), dataModel.getTlxConsFacturado(), importeConsumo);
         }
         dbAdapter.close();
         return round(importeAseo);

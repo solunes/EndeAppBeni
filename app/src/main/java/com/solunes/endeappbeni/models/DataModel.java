@@ -69,6 +69,7 @@ public class DataModel {
     private double TlxImpTot;
     private int TlxKwhAdi;
     private int TlxImpAvi;
+    private int TlxTipImp;
     private int TlxCarFac;
     private int TlxDeuEneC;
     private double TlxDeuEneI;
@@ -189,6 +190,7 @@ public class DataModel {
         TlxImpTot,
         TlxKwhAdi,
         TlxImpAvi,
+        TlxTipImp,
         TlxCarFac,
         TlxDeuEneC,
         TlxDeuEneI,
@@ -329,6 +331,7 @@ public class DataModel {
         dataModel.setTlxImpTot(cursor.getDouble(Columns.TlxImpTot.ordinal()));
         dataModel.setTlxKwhAdi(cursor.getInt(Columns.TlxKwhAdi.ordinal()));
         dataModel.setTlxImpAvi(cursor.getInt(Columns.TlxImpAvi.ordinal()));
+        dataModel.setTlxTipImp(cursor.getInt(Columns.TlxTipImp.ordinal()));
         dataModel.setTlxCarFac(cursor.getInt(Columns.TlxCarFac.ordinal()));
         dataModel.setTlxDeuEneC(cursor.getInt(Columns.TlxDeuEneC.ordinal()));
         dataModel.setTlxDeuEneI(cursor.getDouble(Columns.TlxDeuEneI.ordinal()));
@@ -585,6 +588,14 @@ public class DataModel {
 
     public int getTlxPotTag() {
         return TlxPotTag;
+    }
+
+    public int getTlxTipImp() {
+        return TlxTipImp;
+    }
+
+    public void setTlxTipImp(int tlxTipImp) {
+        TlxTipImp = tlxTipImp;
     }
 
     public void setTlxPotTag(int tlxPotTag) {

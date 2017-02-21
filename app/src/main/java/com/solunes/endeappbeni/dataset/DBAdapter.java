@@ -641,60 +641,67 @@ public class DBAdapter {
         return cursor.getString(FacturaDosificacion.Columns.llave_dosificacion.ordinal());
     }
 
-    public Pair<Double, Integer> getValorTAP(int empresaId, int factarutaActual, double importeConsumo) {
-        double factaRUPorcent = -1;
-        int factaRuAseo = 0;
+    public Pair<Double, Integer> getValorTAP(int factarutaActual, double importeConsumo) {
+        double factaRUPorcent = 0;
+        int factaRuAseo = -1;
+        double importeTAP = 0;
         open();
-        Cursor cursor = db.query(DBHelper.FACTASAS_TABLE, null, Factasas.Columns.empresa_id.name() + " = " + empresaId +
-                " AND " + Factasas.Columns.servicio_id.name() + " = 1", null, null, null, null);
+        Cursor cursor = db.query(DBHelper.FACTASAS_TABLE, null, Factasas.Columns.servicio_id.name() + " = 1",
+                null, null, null, null);
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
             factaRUPorcent = cursor.getDouble(Factasas.Columns.porcentaje.ordinal());
         }
 
-        cursor = db.query(DBHelper.FACTASRUT_TABLE, null, Factasrut.Columns.empresa_id.name() + "= " + empresaId +
-                " AND " + Factasrut.Columns.ruta.name() + " =" + factarutaActual, null, null, null, null);
+        cursor = db.query(DBHelper.FACTASRUT_TABLE, null, Factasrut.Columns.ruta.name() + " =" + factarutaActual,
+                null, null, null, null);
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
-            factaRuAseo = (int) getParametroValor(Parametro.Values.factura_aseo.name());
+            factaRuAseo = cursor.getInt(Factasrut.Columns.aseo.ordinal());
             factaRUPorcent = cursor.getDouble(Factasrut.Columns.porcentaje.ordinal());
         }
 
-        double importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
+        importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
+
+        if (getParametroValor(Parametro.Values.factura_aseo.name()) > 0) {
+            factaRuAseo = -1;
+        }
 
         return Pair.create(importeTAP, factaRuAseo);
     }
 
-    public double getImporteAseo(int categoria, int consumoFacturado, double importeConsumo, int empresaId, int area, int conRuta) {
+    public double getImporteAseo(int conRuta, int categoria, int consumoFacturado, double importeConsumo) {
+        double importeTas = 0;
         double factaRUPorcent = 0;
-        double factaRUPorcent2 = 0;
+        double factaRUPorcent2 = 1;
+
+        int factura_aseo_area = (int) getParametroValor(Parametro.Values.factura_aseo.name());
         int factaruaseo = 0;
-        double importeTas = -1;
+
         open();
-        Cursor cursor = db.query(DBHelper.FACTASAS_TABLE, null, Factasas.Columns.empresa_id.name() + " = " + empresaId +
-                " AND " + Factasas.Columns.servicio_id.name() + " = 2", null, null, null, null);
+        Cursor cursor = db.query(DBHelper.FACTASAS_TABLE, null, Factasas.Columns.servicio_id.name() + " = 2",
+                null, null, null, null);
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
             factaRUPorcent = cursor.getDouble(Factasas.Columns.porcentaje.ordinal());
         }
-        if (area > 0) {
-            cursor = db.query(DBHelper.FACTASRUT_TABLE, null, Factasrut.Columns.empresa_id.name() + " = " + empresaId +
-                    " AND " + Factasrut.Columns.ruta.name() + " = " + conRuta, null, null, null, null);
+        if (factura_aseo_area > 0) {
+            cursor = db.query(DBHelper.FACTASRUT_TABLE, null, Factasrut.Columns.ruta.name() + " = " + conRuta,
+                    null, null, null, null);
             cursor.moveToFirst();
             if (cursor.getCount() > 0) {
                 factaRUPorcent2 = cursor.getDouble(Factasrut.Columns.porcentaje.ordinal());
                 factaruaseo = cursor.getInt(Factasrut.Columns.aseo.ordinal());
             }
         }
-        if (area > 0 && factaRUPorcent2 == 0) {
+        if (factura_aseo_area > 0 && factaRUPorcent2 == 0) {
             importeTas = 0;
         } else {
             if (factaRUPorcent == 0) {
-                if (area > 0 && factaruaseo == 0) {
+                if (factura_aseo_area > 0 && factaruaseo == 0) {
                     importeTas = 0;
                 } else {
-                    cursor = db.query(DBHelper.FACTASASCATEG_TABLE, null, Factasascateg.Columns.empresa_id.name() + " = " + empresaId +
-                            " AND " + Factasascateg.Columns.categoria_id.name() + " = " + categoria +
+                    cursor = db.query(DBHelper.FACTASASCATEG_TABLE, null, Factasascateg.Columns.categoria_id.name() + " = " + categoria +
                             " AND " + Factasascateg.Columns.rango_final + " <= " + consumoFacturado +
                             " AND " + Factasascateg.Columns.rango_final + " >= " + consumoFacturado, null, null, null, null);
                     cursor.moveToFirst();

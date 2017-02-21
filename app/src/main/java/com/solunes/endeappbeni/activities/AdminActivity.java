@@ -369,9 +369,17 @@ public class AdminActivity extends AppCompatActivity {
             values.put(Factasascateg.Columns.linea_id.name(), object.getInt(Factasascateg.Columns.linea_id.name()));
             values.put(Factasascateg.Columns.categoria_id.name(), object.getInt(Factasascateg.Columns.categoria_id.name()));
             values.put(Factasascateg.Columns.descripcion.name(), object.getString(Factasascateg.Columns.descripcion.name()));
-            values.put(Factasascateg.Columns.rango_inicial.name(), object.getInt(Factasascateg.Columns.rango_inicial.name()));
+            try {
+                values.put(Factasascateg.Columns.rango_inicial.name(), object.getInt(Factasascateg.Columns.rango_inicial.name()));
+            } catch (JSONException e) {
+                values.put(Factasascateg.Columns.rango_inicial.name(), 0);
+            }
+            try {
+                values.put(Factasascateg.Columns.importe.name(), object.getInt(Factasascateg.Columns.importe.name()));
+            } catch (JSONException e) {
+                values.put(Factasascateg.Columns.importe.name(), 0);
+            }
             values.put(Factasascateg.Columns.rango_final.name(), object.getInt(Factasascateg.Columns.rango_final.name()));
-            values.put(Factasascateg.Columns.importe.name(), object.getInt(Factasascateg.Columns.importe.name()));
             values.put(Factasascateg.Columns.estado.name(), object.getInt(Factasascateg.Columns.estado.name()));
             dbAdapter.saveObject(DBHelper.FACTASASCATEG_TABLE, values);
         }
@@ -386,7 +394,7 @@ public class AdminActivity extends AppCompatActivity {
             values.put(Factasrut.Columns.porcentaje.name(), object.getDouble(Factasrut.Columns.porcentaje.name()));
             values.put(Factasrut.Columns.estado.name(), object.getInt(Factasrut.Columns.estado.name()));
             values.put(Factasrut.Columns.descripcion.name(), object.getString(Factasrut.Columns.descripcion.name()));
-            values.put(Factasrut.Columns.aseo.name(), object.getBoolean(Factasrut.Columns.aseo.name()));
+            values.put(Factasrut.Columns.aseo.name(), object.getInt(Factasrut.Columns.aseo.name()));
             dbAdapter.saveObject(DBHelper.FACTASRUT_TABLE, values);
         }
 
@@ -443,6 +451,11 @@ public class AdminActivity extends AppCompatActivity {
             @Override
             public void error() {
                 Snackbar.make(view, "Hubo un error al importar", Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void noSD() {
+                Snackbar.make(view, "No se encuentra una tarjeta SD", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
