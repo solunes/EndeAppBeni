@@ -3,6 +3,8 @@ package com.solunes.endeappbeni.utils;
 import com.solunes.endeappbeni.models.DataModel;
 import com.solunes.endeappbeni.models.Historico;
 
+import java.util.ArrayList;
+
 import static com.solunes.endeappbeni.utils.PrintGenerator.calcDays;
 import static com.solunes.endeappbeni.utils.PrintGenerator.formatedDate;
 import static com.solunes.endeappbeni.utils.PrintGenerator.getFechaEmi;
@@ -16,9 +18,11 @@ public class AvisoCobro {
     private static final String TAG = "AvisoCobro";
 
     public static String creator(DataModel dataModel,
-                                 Historico historico,
+                                 Historico hist,
                                  double importeTotalFactura,
-                                 double importeMesCancelar) {
+                                 double importeMesCancelar,
+                                 ArrayList<String> titles,
+                                 ArrayList<Double> values) {
 
         String deudasEnergia = "";
 
@@ -28,6 +32,21 @@ public class AvisoCobro {
                     "T TF01.CPF 0 40 1060 Más deuda(s) pendiente(s) de energía   (" + dataModel.getTlxDeuEneC() + ")  Bs\r\n";
             deudasEnergia += "RIGHT 782\r\n" +
                     "T TF01.CPF 0 720 1060 " + StringUtils.roundTwoDigits(dataModel.getTlxDeuEneI()) + "\r\n";
+        }
+
+        String detalleFacturacion = "";
+//        String[] strings = (String[]) list.keySet().toArray();
+        int yValue = 575;
+//        String[] values = new String[]{"123.2", "123.4", "123.1", "123.3", "123.5"};
+        for (int i = 0; i < titles.size(); i++) {
+            detalleFacturacion +=
+                    "LEFT\r\n" +
+                            "T TF01.CPF 0 65 " + yValue + " " + titles.get(i) + "\r\n" +
+                            "T TF01.CPF 0 575 " + yValue + " Bs\r\n" +
+                            "RIGHT 782\r\n" +
+                            "T TF01.CPF 0 720 " + yValue + " " + StringUtils.roundTwoDigits(values.get(i)) + "\r\n";
+
+            yValue += 25;
         }
 
         String cpclConfigLabel = "! 0 200 200 1625 1\r\n" +
@@ -100,16 +119,8 @@ public class AvisoCobro {
                 "LEFT\r\n" +
                 "T TF01.CPF 0 40 530 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "T TF01.CPF 0 40 560 -------------------------------------------------------------------------------------------------------------\r\n" +
-                "T TF01.CPF 0 65 575 Importe por Energia\r\n" +
-                "T TF01.CPF 0 575 575 Bs\r\n" +
-                "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 575 "+dataModel.getTlxImpEn()+"\r\n" +
 
-                "LEFT\r\n" +
-                "T TF01.CPF 0 65 680 Importe Total Suministro \r\n" +
-                "T TF01.CPF 0 575 680 Bs\r\n" +
-                "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 680 "+StringUtils.roundTwoDigits(dataModel.getTlxImpFac())+"\r\n" +
+                detalleFacturacion +
 
                 "LEFT\r\n" +
                 "LINE 65 760 800 760 1\r\n" +
@@ -122,9 +133,9 @@ public class AvisoCobro {
                 "T TF01.CPF 0 575 815 Bs\r\n" +
                 "T TF01.CPF 0 575 845 Bs\r\n" +
                 "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 790 "+StringUtils.roundTwoDigits(dataModel.getTlxImpTap())+"\r\n" +
-                "T TF01.CPF 0 720 815 "+StringUtils.roundTwoDigits(dataModel.getTlxImpAse())+"\r\n" +
-                "T TF01.CPF 0 720 845 "+StringUtils.roundTwoDigits(importeTotalFactura)+"\r\n" +
+                "T TF01.CPF 0 720 790 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTap()) + "\r\n" +
+                "T TF01.CPF 0 720 815 " + StringUtils.roundTwoDigits(dataModel.getTlxImpAse()) + "\r\n" +
+                "T TF01.CPF 0 720 845 " + StringUtils.roundTwoDigits(importeTotalFactura) + "\r\n" +
 
                 "LEFT\r\n" +
                 "T TF01.CPF 0 40 870 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(importeTotalFactura)) + " \r\n" +
@@ -147,7 +158,7 @@ public class AvisoCobro {
                 "T TF01.CPF 0 40 1035 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "LINE 575 1115 800 1115 3\r\n" +
                 "T TF01.CPF 0 40 1090 Importe total a cancelar Bs.\r\n" +
-                "T TF01.CPF 0 40 1145 Son: "+ NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpTot())) +"\r\n" +
+                "T TF01.CPF 0 40 1145 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpTot())) + "\r\n" +
                 "RIGHT 782\r\n" +
                 "T TF01.CPF 0 720 1090 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) + "\r\n" +
 
@@ -164,33 +175,33 @@ public class AvisoCobro {
                 "T HF06_1.CPF 0 45 1275 Mes/Año\r\n" +
                 "T HF06_1.CPF 0 135 1275 ConsumokWh\r\n" +
 
-                "T TF01.CPF 0 40 1300 " + historico.getConMes01() + "\r\n" +
-                "T TF01.CPF 0 40 1320 " + historico.getConMes02() + "\r\n" +
-                "T TF01.CPF 0 40 1340 " + historico.getConMes03() + "\r\n" +
-                "T TF01.CPF 0 40 1360 " + historico.getConMes04() + "\r\n" +
-                "T TF01.CPF 0 40 1380 " + historico.getConMes05() + "\r\n" +
-                "T TF01.CPF 0 40 1400 " + historico.getConMes06() + "\r\n" +
-                "T TF01.CPF 0 40 1420 " + historico.getConMes07() + "\r\n" +
-                "T TF01.CPF 0 40 1440 " + historico.getConMes08() + "\r\n" +
-                "T TF01.CPF 0 40 1460 " + historico.getConMes09() + "\r\n" +
-                "T TF01.CPF 0 40 1480 " + historico.getConMes10() + "\r\n" +
-                "T TF01.CPF 0 40 1500 " + historico.getConMes11() + "\r\n" +
-                "T TF01.CPF 0 40 1520 " + historico.getConMes12() + "\r\n" +
-                "T TF01.CPF 0 40 1540 " + historico.getConMes12() + "\r\n" +
+                "T TF01.CPF 0 40 1300 " + (hist.getConMes01() == null ? "" : hist.getConMes01()) + "\r\n" +
+                "T TF01.CPF 0 40 1320 " + (hist.getConMes02() == null ? "" : hist.getConMes02()) + "\r\n" +
+                "T TF01.CPF 0 40 1340 " + (hist.getConMes03() == null ? "" : hist.getConMes03()) + "\r\n" +
+                "T TF01.CPF 0 40 1360 " + (hist.getConMes04() == null ? "" : hist.getConMes04()) + "\r\n" +
+                "T TF01.CPF 0 40 1380 " + (hist.getConMes05() == null ? "" : hist.getConMes05()) + "\r\n" +
+                "T TF01.CPF 0 40 1400 " + (hist.getConMes06() == null ? "" : hist.getConMes06()) + "\r\n" +
+                "T TF01.CPF 0 40 1420 " + (hist.getConMes07() == null ? "" : hist.getConMes07()) + "\r\n" +
+                "T TF01.CPF 0 40 1440 " + (hist.getConMes08() == null ? "" : hist.getConMes08()) + "\r\n" +
+                "T TF01.CPF 0 40 1460 " + (hist.getConMes09() == null ? "" : hist.getConMes09()) + "\r\n" +
+                "T TF01.CPF 0 40 1480 " + (hist.getConMes10() == null ? "" : hist.getConMes10()) + "\r\n" +
+                "T TF01.CPF 0 40 1500 " + (hist.getConMes11() == null ? "" : hist.getConMes11()) + "\r\n" +
+                "T TF01.CPF 0 40 1520 " + (hist.getConMes12() == null ? "" : hist.getConMes12()) + "\r\n" +
+                "T TF01.CPF 0 40 1540 " + (hist.getConMes12() == null ? "" : hist.getConMes12()) + "\r\n" +
 
-                "T TF01.CPF 0 160 1300 " + historico.getConKwh01() + "\r\n" +
-                "T TF01.CPF 0 160 1320 " + historico.getConKwh02() + "\r\n" +
-                "T TF01.CPF 0 160 1340 " + historico.getConKwh03() + "\r\n" +
-                "T TF01.CPF 0 160 1360 " + historico.getConKwh04() + "\r\n" +
-                "T TF01.CPF 0 160 1380 " + historico.getConKwh05() + "\r\n" +
-                "T TF01.CPF 0 160 1400 " + historico.getConKwh06() + "\r\n" +
-                "T TF01.CPF 0 160 1420 " + historico.getConKwh07() + "\r\n" +
-                "T TF01.CPF 0 160 1440 " + historico.getConKwh08() + "\r\n" +
-                "T TF01.CPF 0 160 1460 " + historico.getConKwh09() + "\r\n" +
-                "T TF01.CPF 0 160 1480 " + historico.getConKwh10() + "\r\n" +
-                "T TF01.CPF 0 160 1500 " + historico.getConKwh11() + "\r\n" +
-                "T TF01.CPF 0 160 1520 " + historico.getConKwh12() + "\r\n" +
-                "T TF01.CPF 0 160 1540 " + historico.getConKwh12() + "\r\n" +
+                "T TF01.CPF 0 160 1300 " + (hist.getConMes01() == null ? "" : hist.getConKwh01()) + "\r\n" +
+                "T TF01.CPF 0 160 1320 " + (hist.getConMes02() == null ? "" : hist.getConKwh02()) + "\r\n" +
+                "T TF01.CPF 0 160 1340 " + (hist.getConMes03() == null ? "" : hist.getConKwh03()) + "\r\n" +
+                "T TF01.CPF 0 160 1360 " + (hist.getConMes04() == null ? "" : hist.getConKwh04()) + "\r\n" +
+                "T TF01.CPF 0 160 1380 " + (hist.getConMes05() == null ? "" : hist.getConKwh05()) + "\r\n" +
+                "T TF01.CPF 0 160 1400 " + (hist.getConMes06() == null ? "" : hist.getConKwh06()) + "\r\n" +
+                "T TF01.CPF 0 160 1420 " + (hist.getConMes07() == null ? "" : hist.getConKwh07()) + "\r\n" +
+                "T TF01.CPF 0 160 1440 " + (hist.getConMes08() == null ? "" : hist.getConKwh08()) + "\r\n" +
+                "T TF01.CPF 0 160 1460 " + (hist.getConMes09() == null ? "" : hist.getConKwh09()) + "\r\n" +
+                "T TF01.CPF 0 160 1480 " + (hist.getConMes10() == null ? "" : hist.getConKwh10()) + "\r\n" +
+                "T TF01.CPF 0 160 1500 " + (hist.getConMes11() == null ? "" : hist.getConKwh11()) + "\r\n" +
+                "T TF01.CPF 0 160 1520 " + (hist.getConMes12() == null ? "" : hist.getConKwh12()) + "\r\n" +
+                "T TF01.CPF 0 160 1540 " + (hist.getConMes12() == null ? "" : hist.getConKwh12()) + "\r\n" +
 
                 "T TF01.CPF 0 260 1280 Fecha de Vencimiento: \r\n" +
                 "T TF01.CPF 0 260 1305 Fecha estimada proxima medicion: \r\n" +

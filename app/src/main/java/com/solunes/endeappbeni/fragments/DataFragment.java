@@ -981,7 +981,9 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     dataModel,
                     historico,
                     importeTotalFactura,
-                    importeMesCancelar);
+                    importeMesCancelar,
+                    printTitles,
+                    printValues);
         }
         onFragmentListener.onPrinting(print);
         printValues = new ArrayList<>();
