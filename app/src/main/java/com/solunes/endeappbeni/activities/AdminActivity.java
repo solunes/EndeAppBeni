@@ -71,6 +71,7 @@ public class AdminActivity extends AppCompatActivity {
     private EditText editPrintName;
     private EditText editArea;
     private TextView printName;
+    private TextView area;
     private String url;
 
     private AlertDialog.Builder builder;
@@ -101,6 +102,10 @@ public class AdminActivity extends AppCompatActivity {
         Button btnFixParams = (Button) findViewById(R.id.btn_fix_params);
         Button btnArea = (Button) findViewById(R.id.btn_area);
         nroDomain = (TextView) findViewById(R.id.label_nro_domain);
+        area = (TextView) findViewById(R.id.label_area);
+        if (UserPreferences.getInt(getApplicationContext(), KEY_AREA) != 0) {
+            area.setText("Número de área: " + UserPreferences.getInt(getApplicationContext(), KEY_AREA));
+        }
         url = UserPreferences.getString(getApplicationContext(), KEY_DOMAIN);
         if (url != null) {
             nroDomain.setText("Url: " + url);
@@ -128,6 +133,7 @@ public class AdminActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 UserPreferences.putInt(getApplicationContext(), KEY_AREA, Integer.parseInt(editArea.getText().toString()));
+                area.setText("Número de área: " + UserPreferences.getInt(getApplicationContext(), KEY_AREA));
             }
         });
         btnFixParams.setOnClickListener(new View.OnClickListener() {

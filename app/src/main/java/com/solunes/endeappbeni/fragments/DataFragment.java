@@ -38,6 +38,7 @@ import com.solunes.endeappbeni.models.Parametro;
 import com.solunes.endeappbeni.models.PrintObs;
 import com.solunes.endeappbeni.models.PrintObsData;
 import com.solunes.endeappbeni.models.User;
+import com.solunes.endeappbeni.utils.AvisoCobro;
 import com.solunes.endeappbeni.utils.FileUtils;
 import com.solunes.endeappbeni.utils.GenLecturas;
 import com.solunes.endeappbeni.utils.PrintGenerator;
@@ -960,19 +961,29 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         String nit = dbAdapter.getParametroTexto(Parametro.Values.nit.name());
         double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
         dbAdapter.close();
-        onFragmentListener.onPrinting(PrintGenerator.creator(
-                dataModel,
-                printTitles,
-                printValues,
-                historico,
-                importeTotalFactura,
-                importeMesCancelar,
-                garantiaString,
-                carDep,
-                aseoTitle,
-                tapTitle,
-                nit,
-                leyenda));
+        String print;
+        if (dataModel.getTlxTipImp() == 0) {
+            print = PrintGenerator.creator(
+                    dataModel,
+                    printTitles,
+                    printValues,
+                    historico,
+                    importeTotalFactura,
+                    importeMesCancelar,
+                    garantiaString,
+                    carDep,
+                    aseoTitle,
+                    tapTitle,
+                    nit,
+                    leyenda);
+        } else {
+            print = AvisoCobro.creator(
+                    dataModel,
+                    historico,
+                    importeTotalFactura,
+                    importeMesCancelar);
+        }
+        onFragmentListener.onPrinting(print);
         printValues = new ArrayList<>();
         printTitles = new ArrayList<>();
         importeMesCancelar = 0;

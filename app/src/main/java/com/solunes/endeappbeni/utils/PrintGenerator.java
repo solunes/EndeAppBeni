@@ -44,7 +44,6 @@ public class PrintGenerator {
                                  String tapTitle,
                                  String nit,
                                  String[] leyenda) {
-        calcDays(dataModel.getTlxFecAnt(), dataModel.getTlxFecLec());
         String deudasEnergia = "";
 
         if (dataModel.getTlxDeuEneC() > 0) {
@@ -226,7 +225,7 @@ public class PrintGenerator {
      * @param dateLec fecha actual
      * @return retorna la camtidad de dias entre 27 a 33 dias, si esta fuera de ese intervalo retorna '--'
      */
-    private static String calcDays(String dateAnt, String dateLec) {
+    public static String calcDays(String dateAnt, String dateLec) {
         Calendar calendarAnt = Calendar.getInstance();
         calendarAnt.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateAnt));
         Calendar calendarLec = Calendar.getInstance();
@@ -246,7 +245,7 @@ public class PrintGenerator {
      * @param mes numero del mes
      * @return retorna el nombre del mes segun su numero
      */
-    private static String mesString(int mes) {
+    public static String mesString(int mes) {
         switch (mes) {
             case 1:
                 return "Enero";
@@ -282,7 +281,7 @@ public class PrintGenerator {
      * @param fecha la fecha a ser procesada
      * @return retorna la fecha en el formato dd-MM-yy
      */
-    private static String formatedDate(String fecha) {
+    public static String formatedDate(String fecha) {
         String[] split = fecha.split("-");
         String year = split[0];
         String month = split[1];
@@ -464,7 +463,7 @@ public class PrintGenerator {
      * @param fecemi un string con la fecha de emision
      * @return retorna la fecha de emision con el siguiente formato: 25 de Octubre de 2016
      */
-    private static String getFechaEmi(String fecemi) {
+    public static String getFechaEmi(String fecemi) {
         Date date = StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, fecemi);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);

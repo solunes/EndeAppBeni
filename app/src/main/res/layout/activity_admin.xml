@@ -13,9 +13,9 @@
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -77,13 +77,27 @@
                     android:inputType="number" />
             </android.support.design.widget.TextInputLayout>
 
-            <Button
-                android:id="@+id/btn_area"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                android:layout_marginRight="@dimen/activity_horizontal_margin"
-                android:text="guardar area" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/btn_area"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:text="guardar area" />
+
+                <TextView
+                    android:id="@+id/label_area"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin_half"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin_half"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+            </LinearLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/input_print_name"
