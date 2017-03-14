@@ -318,7 +318,7 @@ public class DBAdapter {
      */
     public Cursor getObs() {
         open();
-        Cursor query = db.query(DBHelper.OBS_TABLE, null, null, null, null, null, null);
+        Cursor query = db.query(DBHelper.OBS_TABLE, null, Obs.Columns.ObsAut.name() + " = 0", null, null, null, null);
         return query;
     }
 

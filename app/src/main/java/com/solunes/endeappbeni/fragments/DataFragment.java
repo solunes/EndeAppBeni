@@ -278,13 +278,20 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     if (input.isEmpty()) {
                         input = "0";
                     }
-                    final String finalInput = input;
 
                     // obtener tipo de lectura
                     int tipoLectura = dataModel.getTlxTipLec();
                     if (obs.getId() != 104) {
                         tipoLectura = obs.getObsLec();
                     }
+
+                    if (obs.getObsInd() == 1) {
+                        input = String.valueOf(dataModel.getTlxUltInd());
+                    } else if (obs.getObsInd() == 2) {
+                        input = "0";
+                    }
+
+                    final String finalInput = input;
 
                     // Precintos
                     if (dataModel.getTlxPotTag() == 1) {
@@ -455,10 +462,16 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 message += "\n- Consumo elevado";
                 isAlert = true;
                 autoObs.add(80);
+                if (obsLec(dbAdapter, 80)) {
+                    tipoLectura = 5;
+                }
             } else if (lecturaKwh < (conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_bajo.name()) / 100))) {
                 message += "\n- Consumo bajo";
                 isAlert = true;
                 autoObs.add(81);
+                if (obsLec(dbAdapter, 81)) {
+                    tipoLectura = 5;
+                }
             }
             if (giro) {
                 message += "\n- Giro de medidor";
@@ -584,15 +597,15 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             }
 
             // verificacion de limites maximos para consumos muy elevados
-            int maxKwh = dbAdapter.getMaxKwh(dataModel.getTlxCtg());
-            if (maxKwh == -1) {
-                Toast.makeText(getContext(), "No hay un límite máximo para el consumo", Toast.LENGTH_LONG).show();
-                return false;
-            }
-            if (lectura >= maxKwh) {
-                tipoLectura = 5;
-                Log.e(TAG, "calculo: postergado");
-            }
+//            int maxKwh = dbAdapter.getMaxKwh(dataModel.getTlxCtg());
+//            if (maxKwh == -1) {
+//                Toast.makeText(getContext(), "No hay un límite máximo para el consumo", Toast.LENGTH_LONG).show();
+//                return false;
+//            }
+//            if (lectura >= maxKwh) {
+//                tipoLectura = 5;
+//                Log.e(TAG, "calculo: postergado");
+//            }
 
             if (tipoLectura == 5) {
                 dataModel.setTlxNvaLec(nuevaLectura);
@@ -611,11 +624,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
             // correccion para consumo promedio
             if (tipoLectura == 3 || tipoLectura == 9) {
-                dataModel.setTlxNvaLec(dataModel.getTlxUltInd());
                 dataModel.setTlxKwhDev(lectura);
-            } else {
-                dataModel.setTlxNvaLec(nuevaLectura);
             }
+
+            dataModel.setTlxNvaLec(nuevaLectura);
             dataModel.setTlxTipLec(tipoLectura);
             dataModel.setTlxConsumo(lectura);
 
@@ -1362,5 +1374,13 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             int intLecttura = Integer.parseInt(strlectura.substring(0, strlectura.length() - decimales));
             return (intLecttura + newInt);
         }
+    }
+
+    private boolean obsLec(DBAdapter dbAdapter, int obsCod) {
+        Obs obs1 = Obs.fromCursor(dbAdapter.getObs(obsCod));
+        if (obs1.getObsLec() == 5) {
+            return true;
+        }
+        return false;
     }
 }

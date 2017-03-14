@@ -1,17 +1,22 @@
 package com.solunes.endeappbeni.activities;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.solunes.endeappbeni.BuildConfig;
 import com.solunes.endeappbeni.R;
 import com.solunes.endeappbeni.dataset.DBAdapter;
 import com.solunes.endeappbeni.models.User;
@@ -40,6 +45,8 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
+
+        versionName();
 
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -104,5 +111,10 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void versionName() {
+        TextView textView = (TextView) findViewById(R.id.label_version_name);
+        textView.setText("v"+BuildConfig.VERSION_NAME);
     }
 }

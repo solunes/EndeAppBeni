@@ -301,6 +301,12 @@ public class TestActivity extends AppCompatActivity {
             tipoLectura = obs.getObsLec();
         }
 
+        if (obs.getObsInd() == 1) {
+            lecturaEnergia = dataModel.getTlxUltInd();
+        } else if (obs.getObsInd() == 2) {
+            lecturaEnergia  = 0;
+        }
+
         methodPequeñaMedianaDemanda(dataModel, lecturaEnergia, tipoLectura, obs);
     }
 
