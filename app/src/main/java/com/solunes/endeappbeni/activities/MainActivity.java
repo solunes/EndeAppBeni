@@ -2,6 +2,7 @@ package com.solunes.endeappbeni.activities;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import com.solunes.endeappbeni.networking.CallbackAPI;
 import com.solunes.endeappbeni.networking.GetRequest;
 import com.solunes.endeappbeni.networking.PostRequest;
 import com.solunes.endeappbeni.networking.Token;
+import com.solunes.endeappbeni.utils.NumberToLetterConverter;
 import com.solunes.endeappbeni.utils.StringUtils;
 import com.solunes.endeappbeni.utils.Urls;
 import com.solunes.endeappbeni.utils.UserPreferences;
@@ -111,6 +113,14 @@ public class MainActivity extends AppCompatActivity {
 
         Log.e(TAG, "onCreate: " + getExternalFilesDir(null));
 
+        try {
+            Log.e(TAG, "sendPrint: " + NumberToLetterConverter.convertNumberToLetter(123.22));
+            Log.e(TAG, "sendPrint: " + NumberToLetterConverter.convertNumberToLetter(123.200));
+
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "onCreate: ", e);
+        }
+
         // se verifican las fechas de las accciones como descarga, envio y parametros fijos
         Calendar calendar = Calendar.getInstance();
         long dateDownload = UserPreferences.getLong(this, KEY_DOWNLOAD);
@@ -186,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setMessage("Descargando....");
         progressDialog.setCancelable(false);
 
-        final String url = Urls.urlDescarga(getApplicationContext(), UserPreferences.getInt(getApplicationContext(), AdminActivity.KEY_AREA),user.getLecCod());
+        final String url = Urls.urlDescarga(getApplicationContext(), UserPreferences.getInt(getApplicationContext(), AdminActivity.KEY_AREA), user.getLecCod());
         Token.getToken(getApplicationContext(), user, new Token.CallbackToken() {
             @Override
             public void onSuccessToken() {
@@ -278,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
      * @param progressDialog
      */
     public void sendPostRequest(final View view, final ProgressDialog progressDialog) {
-        Hashtable<String, String> params = prepareDataToPost();
+        Hashtable<String, String> params = prepareDataToPost(getApplicationContext(), user);
 //                Token.getToken(getApplicationContext(), user);
         new PostRequest(getApplicationContext(), params, null, Urls.urlSubida(getApplicationContext()), new CallbackAPI() {
             @Override
@@ -520,21 +530,20 @@ public class MainActivity extends AppCompatActivity {
      *
      * @return retorna un hashtable para enviarlo en el endpoint
      */
-    public Hashtable<String, String> prepareDataToPost() {
+    public static Hashtable<String, String> prepareDataToPost(Context context, User user) {
         Hashtable<String, String> params = new Hashtable<>();
 
-        DBAdapter dbAdapter = new DBAdapter(this);
+        DBAdapter dbAdapter = new DBAdapter(context);
         ArrayList<DataModel> allData = dbAdapter.getAllDataToSend();
 
         params.put("UsrCod", String.valueOf(user.getLecCod()));
-        params.put("area_id", String.valueOf(UserPreferences.getInt(getApplicationContext(), AdminActivity.KEY_AREA)));
+        params.put("area_id", String.valueOf(UserPreferences.getInt(context, AdminActivity.KEY_AREA)));
 
         for (DataModel dataModel : allData) {
             String json = DataModel.getJsonToSend(dataModel,
                     dbAdapter.getDataObsByCli(dataModel.getId()),
                     dbAdapter.getPrintObsData(dataModel.getId()),
                     dbAdapter.getDetalleFactura(dataModel.getId()));
-            Log.e(TAG, "prepareDataToPost json: " + json);
             params.put("" + (dataModel.getTlxCli()), json);
         }
 
@@ -545,7 +554,6 @@ public class MainActivity extends AppCompatActivity {
                 MedEntreLineas entreLineas = entreLineasList.get(i);
                 jsonArray.put(i, entreLineas.toJson());
             }
-            Log.e(TAG, "prepareDataToPost: mel: " + jsonArray.toString());
             params.put("med_entre_lineas", jsonArray.toString());
         } catch (JSONException e) {
             e.printStackTrace();
@@ -718,7 +726,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendEveryMinute() {
-        Hashtable<String, String> params = prepareDataToPost();
+        Hashtable<String, String> params = prepareDataToPost(getApplicationContext(), user);
         new PostRequest(getApplicationContext(), params, null, Urls.urlSubida(getApplicationContext()), new CallbackAPI() {
             @Override
             public void onSuccess(String result, int statusCode) {

@@ -41,6 +41,7 @@ import com.solunes.endeappbeni.models.User;
 import com.solunes.endeappbeni.utils.AvisoCobro;
 import com.solunes.endeappbeni.utils.FileUtils;
 import com.solunes.endeappbeni.utils.GenLecturas;
+import com.solunes.endeappbeni.utils.NumberToLetterConverter;
 import com.solunes.endeappbeni.utils.PrintGenerator;
 import com.solunes.endeappbeni.utils.StringUtils;
 
@@ -140,6 +141,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         while (cursor.moveToNext()) {
             listPrintObs.add(PrintObs.fromCursor(cursor));
         }
+        cursor.close();
         user = dbAdapter.getUser(arguments.getInt(KEY_ID_USER));
         dataModel = dbAdapter.getData(arguments.getInt(KEY_ID_DATA));
         Log.e(TAG, "onCreateView: " +
@@ -648,10 +650,11 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
         // agregar cargo fijo y energia al array de impresion
-        printTitles.add(dbAdapter.getItemDescription(1));
-        printValues.add(GenLecturas.round(dataModel.getTlxCarFij()));
+//        printTitles.add(dbAdapter.getItemDescription(1));
+//        printValues.add(GenLecturas.round(dataModel.getTlxCarFij()));
         printTitles.add("Importe por energía");
-        printValues.add(GenLecturas.round(dataModel.getTlxImpEn()));
+        printValues.add(GenLecturas.round(dataModel.getTlxImpEn() + dataModel.getTlxCarFij()));
+        Log.e(TAG, "calculo: " + GenLecturas.round(dataModel.getTlxImpEn()) + GenLecturas.round(dataModel.getTlxCarFij()));
 
         // calculo de potencia para mediana demanda
         double importePotencia = 0;
@@ -685,8 +688,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + dataModel.getTlxImpEn() + dataModel.getTlxImpPot());
         // agregar importe por consumo al array de impresion
-        printTitles.add("Importe por consumo");
-        printValues.add(importeConsumo);
+//        printTitles.add("Importe por consumo");
+//        printValues.add(importeConsumo);
 
         // verificar la tarifa dignidad, calcular, guardar el importe en detalle facturacion
         double tarifaDignidad = 0;
@@ -719,8 +722,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         // calcular consumo total
         double totalConsumo = GenLecturas.totalConsumo(importeConsumo, tarifaDignidad);
         // agregar consumo total al array de impresion
-        printTitles.add("Importe total por consumo");
-        printValues.add(totalConsumo);
+//        printTitles.add("Importe total por consumo");
+//        printValues.add(totalConsumo);
 
         // array de ids de items facturacion de detalle facturacion
         // se pueden agregar mas cargos al array usando el item_facturacion_id
@@ -766,7 +769,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             dataModel.setTlxImpAse(totalSuministroAseo);
         }
         // agregar total por el suministro al array de impresion
-        printTitles.add("Importe total por el suministro");
+        printTitles.add("Importe Total Suministro");
         printValues.add(dataModel.getTlxImpFac());
 
         // calculo de importe a facturar
@@ -959,9 +962,13 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         String aseoTitle = dbAdapter.getItemDescription(171);
         String tapTitle = dbAdapter.getItemDescription(153);
         String nit = dbAdapter.getParametroTexto(Parametro.Values.nit.name());
+        String consejo = dbAdapter.getParametroTexto(Parametro.Values.leyenda_consejo.name());
         double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
         dbAdapter.close();
         String print;
+
+        Log.e(TAG, "sendPrint: " + NumberToLetterConverter.convertNumberToLetter(importeTotalFactura));
+
         if (dataModel.getTlxTipImp() == 0) {
             print = PrintGenerator.creator(
                     dataModel,
@@ -977,13 +984,18 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     nit,
                     leyenda);
         } else {
+            leyenda = dbAdapter.getLeyendaCobro();
             print = AvisoCobro.creator(
                     dataModel,
                     historico,
                     importeTotalFactura,
                     importeMesCancelar,
                     printTitles,
-                    printValues);
+                    printValues,
+                    garantiaString,
+                    carDep,
+                    leyenda,
+                    consejo);
         }
         onFragmentListener.onPrinting(print);
         printValues = new ArrayList<>();
@@ -1249,7 +1261,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      * @param decimales    decimales del medidor
      * @return un entero con los digitos corregidos
      */
-    private int correccionDeDigitos(int nuevaLectura, int decimales) {
+    public static int correccionDeDigitos(int nuevaLectura, int decimales) {
         if (decimales == 0) {
             return (nuevaLectura);
         }

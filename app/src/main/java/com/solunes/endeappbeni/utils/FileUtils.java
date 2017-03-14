@@ -23,8 +23,8 @@ import java.nio.channels.FileChannel;
 public class FileUtils {
 
     private static final String TAG = "FileUtils";
-    private static final String SHARED_PREFERENCES_NAME = "com.solunes.endeapp_preferences.xml";
-    private static final String DATABSE_STORAGE = "/data/data/com.solunes.endeapp/databases";
+    private static final String SHARED_PREFERENCES_NAME = "com.solunes.endeappbeni_preferences.xml";
+    private static final String DATABSE_STORAGE = "/data/data/com.solunes.endeappbeni/databases";
 
     public static void exportDB(Context context, String data, FileUtilsCallback fileUtilsCallback) {
         String internalStorage = getExternalPath(context);

@@ -16,7 +16,7 @@ public class Parametro {
     }
 
     public enum Values {
-        consumo_elevado, consumo_bajo, leyenda_1, leyenda_2, leyenda_3, tiempo_envio, nit,
+        consumo_elevado, consumo_bajo, leyenda_1, leyenda_2, leyenda_3, leyenda_4, leyenda_consejo, tiempo_envio, nit,
         dignidad_limite, dignidad_descuento, limite_1886, descuento_1886, factura_aseo
     }
 

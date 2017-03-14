@@ -24,6 +24,7 @@ import com.solunes.endeappbeni.models.MedEntreLineas;
 import com.solunes.endeappbeni.models.Obs;
 import com.solunes.endeappbeni.models.Parametro;
 import com.solunes.endeappbeni.models.PrintObsData;
+import com.solunes.endeappbeni.models.Resultados;
 import com.solunes.endeappbeni.models.Tarifa;
 import com.solunes.endeappbeni.models.User;
 import com.solunes.endeappbeni.utils.Encrypt;
@@ -134,6 +135,7 @@ public class DBAdapter {
         db.delete(DBHelper.MED_ENTRE_LINEAS_TABLE, null, null);
         db.delete(DBHelper.DETALLE_FACTURA_TABLE, null, null);
         db.delete(DBHelper.HISTORICO_TABLE, null, null);
+        db.delete(DBHelper.RESULTADOS_TABLE, null, null);
     }
 
     /**
@@ -172,6 +174,18 @@ public class DBAdapter {
         }
         query.close();
         return dataModels;
+    }
+
+    public Resultados getDataRes(int dataId) {
+        open();
+        Cursor query = db.query(DBHelper.RESULTADOS_TABLE, null, Resultados.Columns.general_id.name() + " = " + dataId, null, null, null, null);
+        query.moveToFirst();
+        Resultados resultados = null;
+        if (query.getCount() > 0) {
+            resultados = Resultados.fromCursor(query);
+        }
+        query.close();
+        return resultados;
     }
 
     /**
@@ -283,7 +297,9 @@ public class DBAdapter {
     public int getCountPrinted() {
         open();
         Cursor query = db.query(DBHelper.DATA_TABLE, null, DataModel.Columns.estado_lectura.name() + " = 1", null, null, null, null);
-        return query.getCount();
+        int count = query.getCount();
+        query.close();
+        return count;
     }
 
     /**
@@ -292,7 +308,9 @@ public class DBAdapter {
     public int getCountPostponed() {
         open();
         Cursor query = db.query(DBHelper.DATA_TABLE, null, DataModel.Columns.estado_lectura.name() + " = 2", null, null, null, null);
-        return query.getCount();
+        int count = query.getCount();
+        query.close();
+        return count;
     }
 
     /**
@@ -336,6 +354,7 @@ public class DBAdapter {
         while (cursor.moveToNext()) {
             objects.add(DataObs.fromCursor(cursor));
         }
+        cursor.close();
         return objects;
     }
 
@@ -385,6 +404,7 @@ public class DBAdapter {
         while (query.moveToNext()) {
             arrayList.add(Tarifa.fromCursor(query));
         }
+        query.close();
         return arrayList;
     }
 
@@ -434,7 +454,9 @@ public class DBAdapter {
         open();
         Cursor query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + codigo + "'", null, null, null, null);
         query.moveToNext();
-        return query.getInt(Parametro.Columns.valor.ordinal());
+        int valor = query.getInt(Parametro.Columns.valor.ordinal());
+        query.close();
+        return valor;
     }
 
     /**
@@ -444,7 +466,9 @@ public class DBAdapter {
         open();
         Cursor query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + codigo + "'", null, null, null, null);
         query.moveToNext();
-        return query.getString(Parametro.Columns.texto.ordinal());
+        String texto = query.getString(Parametro.Columns.texto.ordinal());
+        query.close();
+        return texto;
     }
 
     /**
@@ -456,8 +480,11 @@ public class DBAdapter {
                 + " AND " + Tarifa.Columns.item_facturacion_id.name() + " = 1", null, null, null, null);
         if (cursor.getCount() > 0) {
             cursor.moveToNext();
-            return cursor.getDouble(Tarifa.Columns.importe.ordinal());
+            double importe = cursor.getDouble(Tarifa.Columns.importe.ordinal());
+            cursor.close();
+            return importe;
         }
+        cursor.close();
         return 0;
     }
 
@@ -472,8 +499,11 @@ public class DBAdapter {
                 + " AND " + Tarifa.Columns.item_facturacion_id.name() + " = 1", null, null, null, null);
         if (cursor.getCount() > 0) {
             cursor.moveToNext();
-            return cursor.getInt(Tarifa.Columns.kwh_hasta.ordinal());
+            int kwhHasta = cursor.getInt(Tarifa.Columns.kwh_hasta.ordinal());
+            cursor.close();
+            return kwhHasta;
         }
+        cursor.close();
         return 0;
     }
 
@@ -524,6 +554,7 @@ public class DBAdapter {
         while (cursor.moveToNext()) {
             printObsDatas.add(PrintObsData.fromCursor(cursor));
         }
+        cursor.close();
         return printObsDatas;
     }
 
@@ -537,6 +568,7 @@ public class DBAdapter {
         while (cursor.moveToNext()) {
             detalleFacturas.add(DetalleFactura.fromCursor(cursor));
         }
+        cursor.close();
         return detalleFacturas;
     }
 
@@ -552,6 +584,7 @@ public class DBAdapter {
         if (cursor.getCount() > 0) {
             return DetalleFactura.fromCursor(cursor).getImporte();
         }
+        cursor.close();
         return 0;
     }
 
@@ -567,6 +600,7 @@ public class DBAdapter {
         if (cursor.getCount() > 0) {
             return DetalleFactura.fromCursor(cursor);
         }
+        cursor.close();
         return null;
     }
 
@@ -585,6 +619,26 @@ public class DBAdapter {
         query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + Parametro.Values.leyenda_3.name() + "'", null, null, null, null);
         query.moveToNext();
         leyenda[2] = Parametro.fromCursor(query).getTexto();
+        query.close();
+        return leyenda;
+    }
+
+    public String[] getLeyendaCobro() {
+        open();
+        String[] leyenda = new String[4];
+        Cursor query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + Parametro.Values.leyenda_1.name() + "'", null, null, null, null);
+        query.moveToNext();
+        leyenda[0] = Parametro.fromCursor(query).getTexto();
+        query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + Parametro.Values.leyenda_2.name() + "'", null, null, null, null);
+        query.moveToNext();
+        leyenda[1] = Parametro.fromCursor(query).getTexto();
+        query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + Parametro.Values.leyenda_3.name() + "'", null, null, null, null);
+        query.moveToNext();
+        leyenda[2] = Parametro.fromCursor(query).getTexto();
+        query = db.query(DBHelper.PARAMETRO_TABLE, null, Parametro.Columns.codigo.name() + " = '" + Parametro.Values.leyenda_4.name() + "'", null, null, null, null);
+        query.moveToNext();
+        leyenda[3] = Parametro.fromCursor(query).getTexto();
+        query.close();
         return leyenda;
     }
 
@@ -592,10 +646,12 @@ public class DBAdapter {
         open();
         Cursor cursor1 = db.query(DBHelper.DATA_TABLE, null, DataModel.Columns.TlxNroMed.name() + " = " + nroMed, null, null, null, null);
         if (cursor1.getCount() > 0) {
+            cursor1.close();
             return false;
         }
         Cursor cursor2 = db.query(DBHelper.MED_ENTRE_LINEAS_TABLE, null, MedEntreLineas.Columns.MelMed.name() + " = " + nroMed, null, null, null, null);
         if (cursor2.getCount() > 0) {
+            cursor2.close();
             return false;
         }
         return true;
@@ -619,6 +675,7 @@ public class DBAdapter {
         if (cursor.getCount() > 0) {
             return Historico.fromCursor(cursor);
         }
+        cursor.close();
         return null;
     }
 
@@ -628,8 +685,11 @@ public class DBAdapter {
                 + " AND " + Tarifa.Columns.item_facturacion_id + " = 41", null, null, null, null);
         cursor.moveToNext();
         if (cursor.getCount() > 0) {
-            return cursor.getDouble(Tarifa.Columns.importe.ordinal());
+            double importe = cursor.getDouble(Tarifa.Columns.importe.ordinal());
+            cursor.close();
+            return importe;
         }
+        cursor.close();
         return -1;
     }
 
@@ -638,7 +698,9 @@ public class DBAdapter {
         Cursor cursor = db.query(DBHelper.FACTURA_DOSIFICACION_TABLE, null,
                 FacturaDosificacion.Columns.area_id + " = " + are, null, null, null, null);
         cursor.moveToFirst();
-        return cursor.getString(FacturaDosificacion.Columns.llave_dosificacion.ordinal());
+        String llaveDosificacion = cursor.getString(FacturaDosificacion.Columns.llave_dosificacion.ordinal());
+        cursor.close();
+        return llaveDosificacion;
     }
 
     public Pair<Double, Integer> getValorTAP(int factarutaActual, double importeConsumo) {
@@ -667,6 +729,7 @@ public class DBAdapter {
             factaRuAseo = -1;
         }
 
+        cursor.close();
         return Pair.create(importeTAP, factaRuAseo);
     }
 
@@ -694,6 +757,8 @@ public class DBAdapter {
                 factaruaseo = cursor.getInt(Factasrut.Columns.aseo.ordinal());
             }
         }
+        cursor.close();
+        open();
         if (factura_aseo_area > 0 && factaRUPorcent2 == 0) {
             importeTas = 0;
         } else {
@@ -702,7 +767,7 @@ public class DBAdapter {
                     importeTas = 0;
                 } else {
                     cursor = db.query(DBHelper.FACTASASCATEG_TABLE, null, Factasascateg.Columns.categoria_id.name() + " = " + categoria +
-                            " AND " + Factasascateg.Columns.rango_final + " <= " + consumoFacturado +
+                            " AND " + Factasascateg.Columns.rango_inicial + " <= " + consumoFacturado +
                             " AND " + Factasascateg.Columns.rango_final + " >= " + consumoFacturado, null, null, null, null);
                     cursor.moveToFirst();
                     if (cursor.getCount() > 0) {
@@ -713,6 +778,7 @@ public class DBAdapter {
                 importeTas = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
             }
         }
+        cursor.close();
         return importeTas;
     }
 
@@ -722,6 +788,7 @@ public class DBAdapter {
         if (query.getCount() > 0) {
             query.moveToLast();
             DataModel dataModel = DataModel.fromCursor(query);
+            query.close();
             return dataModel;
         }
         query.close();
@@ -736,12 +803,14 @@ public class DBAdapter {
         Cursor allData = db.query(DBHelper.DATA_TABLE, null, null, null, null, null, DataModel.Columns.TlxOrdTpl.name() + " ASC");
         allData.moveToLast();
         int lastOrdTpl = DataModel.fromCursor(allData).getTlxOrdTpl();
+        allData.close();
         while (cursor.moveToNext()) {
             lastOrdTpl++;
             ContentValues cv = new ContentValues();
             cv.put(DataModel.Columns.TlxOrdTpl.name(), lastOrdTpl);
             db.update(DBHelper.DATA_TABLE, cv, DataModel.Columns.id.name() + " = " + cursor.getInt(DataModel.Columns.id.ordinal()), null);
         }
+        cursor.close();
     }
 
     public ArrayList<DataModel> getAllDataToSend() {
@@ -777,8 +846,11 @@ public class DBAdapter {
                 null, null, null, null);
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
-            return cursor.getInt(LimitesMaximos.Columns.max_kwh.ordinal());
+            int maxKwh = cursor.getInt(LimitesMaximos.Columns.max_kwh.ordinal());
+            cursor.close();
+            return maxKwh;
         }
+        cursor.close();
         return -1;
     }
 }

@@ -28,7 +28,6 @@ public class PrintObsData {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.e("TAG", "toJson: " + jsonObject.toString());
         return jsonObject.toString();
     }
 

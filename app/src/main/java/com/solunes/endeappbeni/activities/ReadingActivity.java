@@ -188,24 +188,13 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                doDisconnect();
                 finish();
                 return true;
             case R.id.action_search:
                 return true;
             case R.id.action_print:
-                Log.e(TAG, "print state: " + printState);
-                if (printState == 0) {
-                    new Thread(new Runnable() {
-                        public void run() {
-                            Looper.prepare();
-                            doConnection();
-                            Looper.loop();
-                            Looper.myLooper().quit();
-                        }
-                    }).start();
-                } else {
-                    Snackbar.make(viewPager, "Impresora ya conectada", Snackbar.LENGTH_SHORT).show();
-                }
+                reconnect();
                 return true;
         }
         return false;
@@ -215,6 +204,15 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
     protected void onPause() {
         super.onPause();
         UserPreferences.putInt(this, KEY_LAST_PAGER_PSOTION, datas.get(viewPager.getCurrentItem()).getId());
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        doDisconnect();
+    }
+
+    private void doDisconnect() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -282,6 +280,22 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
         }
 
         return printer;
+    }
+
+    private void reconnect() {
+        Log.e(TAG, "print state: " + printState);
+        if (printState == 0) {
+            new Thread(new Runnable() {
+                public void run() {
+                    Looper.prepare();
+                    doConnection();
+                    Looper.loop();
+                    Looper.myLooper().quit();
+                }
+            }).start();
+        } else {
+            Snackbar.make(viewPager, "Impresora ya conectada", Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     public void disconnect() {

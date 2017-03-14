@@ -88,14 +88,6 @@ public class AdminActivity extends AppCompatActivity {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        Map<String, ?> all = preferences.getAll();
-        for (String key : all.keySet()) {
-            Log.e(TAG, "onCreate: key " + key + " : " + all.get(key));
-        }
-        Log.e(TAG, "onCreate: " + all.toString());
-
         editDomain = (EditText) findViewById(R.id.edit_domain);
         editArea = (EditText) findViewById(R.id.edit_area);
         Button btnSaveDomain = (Button) findViewById(R.id.btn_save_domain);
@@ -114,7 +106,7 @@ public class AdminActivity extends AppCompatActivity {
         Log.e(TAG, "onCreate: " + getExternalFilesDir(null));
 
         // obtener usuario
-        int id_user = getIntent().getExtras().getInt("id_user");
+        final int id_user = getIntent().getExtras().getInt("id_user");
         final DBAdapter dbAdapter = new DBAdapter(this);
         user = dbAdapter.getUser(id_user);
         dbAdapter.close();
@@ -176,6 +168,14 @@ public class AdminActivity extends AppCompatActivity {
             public void onClick(final View view) {
                 Log.e(TAG, "onClick: request permossion method");
                 requestPermissions();
+            }
+        });
+
+        Button test = (Button) findViewById(R.id.btn_test);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(AdminActivity.this, TestActivity.class).putExtra("user_id", id_user));
             }
         });
 

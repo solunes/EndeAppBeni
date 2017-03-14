@@ -52,6 +52,7 @@ public class GenLecturas {
         DBAdapter dbAdapter = new DBAdapter(context);
         // se define la cantidad de kwh que ya se contabilizaron en el cargo fijo
         int descuento = dbAdapter.getCargoFijoDescuento(categoria);
+        dbAdapter.close();
         // si el consumo es menor que el consumo del cargo fijo se devuelve 0
         if (kWhConsumo <= descuento) {
             return 0;
@@ -62,13 +63,15 @@ public class GenLecturas {
         boolean finish = false;
         // se obtienen los rangos de energia para la categoria
         ArrayList<Tarifa> cargoEnergia = dbAdapter.getCargoEnergia(categoria);
+        dbAdapter.close();
         for (int i = 0; i < cargoEnergia.size(); i++) {
             Tarifa tarifa = cargoEnergia.get(i);
             // se define si el consumo restante es mayor a todo el rango o no
             if (kWhConsumo > (tarifa.getKwh_hasta() - descuento)) {
-                res = tarifa.getImporte() * (tarifa.getKwh_hasta() - descuento);
-                kWhConsumo -= (tarifa.getKwh_hasta() - descuento);
-                descuento += tarifa.getKwh_hasta();
+                int diferencia = tarifa.getKwh_hasta() - tarifa.getKwh_desde() + 1;
+                res = tarifa.getImporte() * diferencia;
+                kWhConsumo -= diferencia;
+                descuento += diferencia;
             } else {
                 res = tarifa.getImporte() * kWhConsumo;
                 finish = true;
@@ -110,11 +113,12 @@ public class GenLecturas {
     public static double tarifaDignidad(Context context, int kWhConsumo, double importeConsumo) {
         DBAdapter dbAdapter = new DBAdapter(context);
         int limite = (int) dbAdapter.getParametroValor(Parametro.Values.dignidad_limite.name());
+        dbAdapter.close();
         double descuento = dbAdapter.getParametroValor(Parametro.Values.dignidad_descuento.name()) / 100;
-        Log.e(TAG, "tarifaDignidad: limite " + limite);
-        Log.e(TAG, "tarifaDignidad: descuento " + descuento);
+        dbAdapter.close();
         if (kWhConsumo <= limite) {
-            return round(importeConsumo * -descuento);
+            double round = round(importeConsumo * -descuento);
+            return round;
         } else {
             return 0;
         }
@@ -130,14 +134,16 @@ public class GenLecturas {
      */
     public static double ley1886(Context context, int kWhConsumo, int categoria) {
         DBAdapter dbAdapter = new DBAdapter(context);
-        int limite = (int) dbAdapter.getParametroValor(Parametro.Values.descuento_1886.name());
-        double descuento = (dbAdapter.getParametroValor(Parametro.Values.limite_1886.name()) / 100);
-        Log.e(TAG, "ley1886: limite " + limite);
-        Log.e(TAG, "ley1886: descuento " + descuento);
+        int limite = (int) dbAdapter.getParametroValor(Parametro.Values.limite_1886.name());
+        dbAdapter.close();
+        double descuento = (dbAdapter.getParametroValor(Parametro.Values.descuento_1886.name()) / 100);
+        dbAdapter.close();
+        double cargoFijo = dbAdapter.getCargoFijo(categoria);
+        dbAdapter.close();
         if (kWhConsumo <= limite) {
-            return round(-descuento * (dbAdapter.getCargoFijo(categoria) + subTotal(context, kWhConsumo, categoria, 0)));
+            return round(-descuento * (cargoFijo + subTotal(context, kWhConsumo, categoria, 0)));
         } else {
-            return round(-descuento * (dbAdapter.getCargoFijo(categoria) + subTotal(context, 100, categoria, 0)));
+            return round(-descuento * (cargoFijo + subTotal(context, 100, categoria, 0)));
         }
     }
 
@@ -182,7 +188,7 @@ public class GenLecturas {
         DBAdapter dbAdapter = new DBAdapter(context);
         double importeAseo = 0;
         if (dataModel.getTlxCotaseo() != 0) {
-            importeAseo = dbAdapter.getImporteAseo(dataModel.getTlxRutA(), dataModel.getTlxCtgAseo(), dataModel.getTlxConsFacturado(), importeConsumo);
+            importeAseo = dbAdapter.getImporteAseo(dataModel.getTlxRutA(), dataModel.getTlxCtg(), dataModel.getTlxConsFacturado(), importeConsumo);
         }
         dbAdapter.close();
         return round(importeAseo);

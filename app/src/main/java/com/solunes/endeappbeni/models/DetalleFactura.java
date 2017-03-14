@@ -53,7 +53,6 @@ public class DetalleFactura {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.e("TAG", "toJson: " + jsonObject.toString());
         return jsonObject.toString();
     }
 
@@ -69,7 +68,6 @@ public class DetalleFactura {
     public static double crearDetalle(Context context, int idData, int idItem, double importe) {
         double importeRedondeado = GenLecturas.roundDecimal(importe, 1);
         double diferencia = importe - importeRedondeado;
-        Log.e(TAG, "crearDetalle: ");
 
         DBAdapter dbAdapter = new DBAdapter(context);
         DetalleFactura detalleFactura = dbAdapter.getDetalleFactura(idData, idItem);
@@ -84,6 +82,7 @@ public class DetalleFactura {
         } else {
             dbAdapter.updateObject(DBHelper.DETALLE_FACTURA_TABLE, Columns.id.name(), detalleFactura.getId(), values);
         }
+        dbAdapter.close();
         return importeRedondeado;
     }
 

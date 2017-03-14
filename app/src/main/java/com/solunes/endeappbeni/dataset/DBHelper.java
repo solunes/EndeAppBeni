@@ -19,6 +19,7 @@ import com.solunes.endeappbeni.models.Obs;
 import com.solunes.endeappbeni.models.Parametro;
 import com.solunes.endeappbeni.models.PrintObs;
 import com.solunes.endeappbeni.models.PrintObsData;
+import com.solunes.endeappbeni.models.Resultados;
 import com.solunes.endeappbeni.models.Tarifa;
 import com.solunes.endeappbeni.models.User;
 import com.solunes.endeappbeni.utils.Encrypt;
@@ -55,6 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String FACTASRUT_TABLE = "factasrut_table";
     public static final String FACTASAS_TABLE = "factasas_table";
     public static final String FACTASASCATEG_TABLE = "factasascateg_table";
+    public static final String RESULTADOS_TABLE = "resultados_table";
 
     private Context context;
 
@@ -331,6 +333,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 Factasrut.Columns.descripcion.name() + " text," +
                 Factasrut.Columns.aseo.name() + " integer)");
 
+        sqLiteDatabase.execSQL("CREATE TABLE " + RESULTADOS_TABLE + " (" +
+                Resultados.Columns.id.name() + " integer," +
+                Resultados.Columns.general_id.name() + " integer," +
+                Resultados.Columns.lectura.name() + " integer," +
+                Resultados.Columns.lectura_potencia.name() + " integer," +
+                Resultados.Columns.observacion.name() + " integer)");
+
         // inserts
         // TODO: 25-11-16 encriptacion
         String encriptPass = null;
@@ -369,6 +378,7 @@ public class DBHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FACTASRUT_TABLE);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FACTASASCATEG_TABLE);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FACTASAS_TABLE);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + RESULTADOS_TABLE);
 
         onCreate(sqLiteDatabase);
     }

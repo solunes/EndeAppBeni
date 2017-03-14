@@ -1,5 +1,7 @@
 package com.solunes.endeappbeni.utils;
 
+import android.util.Log;
+
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
