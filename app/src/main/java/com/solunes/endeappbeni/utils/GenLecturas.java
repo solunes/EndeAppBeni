@@ -11,6 +11,9 @@ import com.solunes.endeappbeni.models.DetalleFactura;
 import com.solunes.endeappbeni.models.Parametro;
 import com.solunes.endeappbeni.models.Tarifa;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 /**
@@ -230,6 +233,7 @@ public class GenLecturas {
         return (double) tmp / factor;
     }
 
+
     /**
      * Este metodo recondea decimales.
      *
@@ -238,9 +242,18 @@ public class GenLecturas {
      * @return retorna un decimal redondeado
      */
     public static double roundDecimal(double value, int decimal) {
+        boolean isNegative = false;
+        if (value < 0) {
+            value = Math.abs(value);
+            isNegative = true;
+        }
         long factor = (long) Math.pow(10, decimal);
         value = value * factor;
         long tmp = Math.round(value);
-        return (double) tmp / factor;
+        double res = (double) tmp / factor;
+        if (isNegative) {
+            res = -res;
+        }
+        return res;
     }
 }

@@ -723,7 +723,7 @@ public class DBAdapter {
             factaRUPorcent = cursor.getDouble(Factasrut.Columns.porcentaje.ordinal());
         }
 
-        importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
+        importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent,1);
 
         if (getParametroValor(Parametro.Values.factura_aseo.name()) > 0) {
             factaRuAseo = -1;
@@ -775,7 +775,7 @@ public class DBAdapter {
                     }
                 }
             } else {
-                importeTas = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
+                importeTas = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent,1);
             }
         }
         cursor.close();

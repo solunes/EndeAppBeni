@@ -1,6 +1,7 @@
 package com.solunes.endeappbeni.activities;
 
 import android.content.ContentValues;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -67,11 +68,7 @@ public class TestActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                for (DataModel dataModel : dbAdapter.getAllData()) {
-                    Resultados dataRes = dbAdapter.getDataRes(dataModel.getId());
-                    inicio(dataModel, dataRes.getLectura(), dataRes.getObservacion());
-                    sleeper(5);
-                }
+                startTest();
             }
         });
 
@@ -304,7 +301,7 @@ public class TestActivity extends AppCompatActivity {
         if (obs.getObsInd() == 1) {
             lecturaEnergia = dataModel.getTlxUltInd();
         } else if (obs.getObsInd() == 2) {
-            lecturaEnergia  = 0;
+            lecturaEnergia = 0;
         }
 
         methodPequeñaMedianaDemanda(dataModel, lecturaEnergia, tipoLectura, obs);
@@ -361,12 +358,8 @@ public class TestActivity extends AppCompatActivity {
             }
         }
 
-        final int finalLecturaKwh = lecturaKwh;
-        final int finalNuevaLectura = nuevaLectura;
-        final int finalTipoLectura = tipoLectura;
-
         // si hay alerta y el tipo de lectura no es postergada
-        confirmarLectura(dataModel, finalTipoLectura, finalNuevaLectura, finalLecturaKwh, obs);
+        confirmarLectura(dataModel, tipoLectura, nuevaLectura, lecturaKwh, obs);
     }
 
     private void confirmarLectura(DataModel dataModel, int finalTipoLectura, int finalNuevaLectura, int finalLecturaKwh, Obs obs) {
@@ -423,7 +416,6 @@ public class TestActivity extends AppCompatActivity {
         lectura = (int) (lectura * dataModel.getTlxFacMul());
         dataModel.setTlxConsumo(lectura);
 
-
         // correccion de kwh a devolver sino es consumo promedio o lectura ajustada
         if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3 && tipoLectura != 9) {
             lectura = lectura - dataModel.getTlxKwhDev();
@@ -450,37 +442,6 @@ public class TestActivity extends AppCompatActivity {
         // obtener y calcular el importe de energia por rangos
         double importeEnergia = GenLecturas.importeEnergia(getApplicationContext(), lectura, dataModel.getTlxCtg(), dataModel.getId());
         dataModel.setTlxImpEn(importeEnergia);
-
-
-        // calculo de potencia para mediana demanda
-//        double importePotencia = 0;
-//        if (dataModel.getTlxTipDem() == 2) {
-//            if (!reprint) {
-        // correccion de digitos para la potencia leida
-//                int potenciaLeida = 0;
-//                if (!inputPotenciaReading.getText().toString().isEmpty()) {
-//                    potenciaLeida = Integer.valueOf(inputPotenciaReading.getText().toString());
-//                }
-//                potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
-//                dataModel.setTlxPotLei(potenciaLeida);
-        // maximo entre potencia anterior y potencia leida
-//                int potMax = Math.max(potenciaLeida, dataModel.getTlxPotFac());
-        // calculo del importe por potencia
-//                double cargoPotencia = dbAdapter.getCargoPotencia(dataModel.getTlxCtg());
-//                if (cargoPotencia == -1) {
-//                    Toast.makeText(getContext(), "No hay cargo de potencia", Toast.LENGTH_LONG).show();
-//                    return false;
-//                }
-//                importePotencia = potMax * cargoPotencia;
-//                importePotencia = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 41, importePotencia);
-//                dataModel.setTlxImpPot(importePotencia);
-//            }
-
-        // agregar el importe por potencia al array de impresion
-//            printTitles.add(dbAdapter.getItemDescription(41));
-//            printValues.add(GenLecturas.round(dataModel.getTlxImpPot()));
-//        }
-
 
         double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + dataModel.getTlxImpEn() + dataModel.getTlxImpPot());
 
@@ -640,5 +601,37 @@ public class TestActivity extends AppCompatActivity {
             values.put(key, string);
         }
         return values;
+    }
+
+    private void startTest() {
+        new AsyncTask<Boolean, Void, Boolean>() {
+
+
+            @Override
+            protected Boolean doInBackground(Boolean... booleen) {
+                //                ArrayList<Integer> integers = new ArrayList<>();
+//                integers.add(4371);
+//                integers.add(5075);
+//                integers.add(1968);
+//                integers.add(4277);
+//                integers.add(5711);
+//                integers.add(5903);
+//                for (int id : integers) {
+//                    DataModel data = dbAdapter.getData(id);
+//                    Resultados dataRes = dbAdapter.getDataRes(data.getId());
+//                    inicio(data, dataRes.getLectura(), dataRes.getObservacion());
+//                }
+
+                for (DataModel dataModel : dbAdapter.getAllData()) {
+                    Resultados dataRes = dbAdapter.getDataRes(dataModel.getId());
+                    inicio(dataModel, dataRes.getLectura(), dataRes.getObservacion());
+                    sleeper(5);
+                }
+                Log.e(TAG, "doInBackground: finish");
+
+                return Boolean.TRUE;
+            }
+
+        }.execute();
     }
 }

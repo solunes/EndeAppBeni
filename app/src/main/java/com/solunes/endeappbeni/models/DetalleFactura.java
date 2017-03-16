@@ -86,8 +86,6 @@ public class DetalleFactura {
         return importeRedondeado;
     }
 
-
-
     public int getId() {
         return id;
     }
