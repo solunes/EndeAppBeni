@@ -101,9 +101,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
     private ArrayList<Double> printValues;
     private ArrayList<PrintObs> listPrintObs;
 
-    private double importeTotalFactura;
-    private double importeMesCancelar;
-
     private DataModel dataModel;
 
     private int positionPrintObs;
@@ -595,23 +592,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      */
     private boolean calculo(int tipoLectura, int nuevaLectura, int lectura, boolean reprint, Obs obs) {
         DBAdapter dbAdapter = new DBAdapter(getContext());
-
+        double importeEnergia = 0;
         // revisar si no es reimpresion, para no realizar el calculo de nuevo
         if (!reprint) {
             if (obs.getObsFac() == 0) {
                 dataModel.setTlxImpAvi(0);
             }
-
-            // verificacion de limites maximos para consumos muy elevados
-//            int maxKwh = dbAdapter.getMaxKwh(dataModel.getTlxCtg());
-//            if (maxKwh == -1) {
-//                Toast.makeText(getContext(), "No hay un límite máximo para el consumo", Toast.LENGTH_LONG).show();
-//                return false;
-//            }
-//            if (lectura >= maxKwh) {
-//                tipoLectura = 5;
-//                Log.e(TAG, "calculo: postergado");
-//            }
 
             if (tipoLectura == 5) {
                 dataModel.setTlxNvaLec(nuevaLectura);
@@ -665,8 +651,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             dataModel.setTlxCarFij(cargoFijo);
 
             // obtener y calcular el importe de energia por rangos
-            double importeEnergia = GenLecturas.importeEnergia(getContext(), lectura, dataModel.getTlxCtg(), dataModel.getId());
-            dataModel.setTlxImpEn(importeEnergia);
+            importeEnergia = GenLecturas.importeEnergia(getContext(), lectura, dataModel.getTlxCtg(), dataModel.getId());
         }
 
         // agregar cargo fijo y energia al array de impresion
@@ -674,7 +659,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 //        printValues.add(GenLecturas.round(dataModel.getTlxCarFij()));
         printTitles.add("Importe por energía");
         printValues.add(GenLecturas.round(dataModel.getTlxImpEn() + dataModel.getTlxCarFij()));
-        Log.e(TAG, "calculo: " + GenLecturas.round(dataModel.getTlxImpEn()) + GenLecturas.round(dataModel.getTlxCarFij()));
 
         // calculo de potencia para mediana demanda
         double importePotencia = 0;
@@ -706,7 +690,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
 
-        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + dataModel.getTlxImpEn() + dataModel.getTlxImpPot());
+        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + importeEnergia + dataModel.getTlxImpPot());
+        dataModel.setTlxImpEn(importeConsumo);
         // agregar importe por consumo al array de impresion
 //        printTitles.add("Importe por consumo");
 //        printValues.add(importeConsumo);
@@ -724,6 +709,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             printTitles.add(dbAdapter.getItemDescription(192));
             printValues.add(dataModel.getTlxDesTdi());
         }
+        dataModel.setTlxImpTotCns(dataModel.getTlxImpEn() + tarifaDignidad);
 
         // verificar que hay ley 1886 calcular su importe y guardarlo en detalle facturacion
         double ley1886 = 0;
@@ -739,8 +725,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             printValues.add(dataModel.getTlxLey1886());
         }
 
-        // calcular consumo total
-        double totalConsumo = GenLecturas.totalConsumo(importeConsumo, tarifaDignidad);
         // agregar consumo total al array de impresion
 //        printTitles.add("Importe total por consumo");
 //        printValues.add(totalConsumo);
@@ -764,8 +748,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
         // calculo del importe total del suministro
-        double totalSuministro = GenLecturas.totalSuministro(totalConsumo, dataModel.getTlxLey1886(), cargoExtraTotal);
+        double totalSuministro = GenLecturas.totalSuministro(dataModel.getTlxImpTotCns(), dataModel.getTlxLey1886(), cargoExtraTotal);
+        dataModel.setTlxImpSum(totalSuministro);
 
+        double importeTotalFactura = 0;
         // calculo de suministro tap y suministro por aseo
         if (!reprint) {
             Pair<Double, Integer> resSuministroTap = GenLecturas.totalSuministroTap(dataModel, getContext(), importeConsumo);
@@ -784,19 +770,20 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 }
             }
             totalSuministroAseo = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 171, totalSuministroAseo);
-            dataModel.setTlxImpFac(totalSuministro);
             dataModel.setTlxImpTap(totalSuministroTap);
             dataModel.setTlxImpAse(totalSuministroAseo);
+            importeTotalFactura = GenLecturas.totalFacturar(totalSuministro, dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
+            dataModel.setTlxImpFac(importeTotalFactura);
         }
         // agregar total por el suministro al array de impresion
         printTitles.add("Importe Total Suministro");
-        printValues.add(dataModel.getTlxImpFac());
+        printValues.add(dataModel.getTlxImpSum());
 
         // calculo de importe a facturar
-        importeTotalFactura = GenLecturas.totalFacturar(totalSuministro, dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
-        double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
-        importeMesCancelar = importeTotalFactura + carDep;
         if (!reprint) {
+            double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
+            double importeMesCancelar = importeTotalFactura + carDep;
+            dataModel.setTlxImpMes(importeMesCancelar);
             dataModel.setTlxImpTot(GenLecturas.round(importeMesCancelar + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI()));
             dataModel.setTlxCodCon(getControlCode(dataModel));
             if (dataModel.getTlxTipLec() != 5) {
@@ -987,16 +974,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         dbAdapter.close();
         String print;
 
-        Log.e(TAG, "sendPrint: " + NumberToLetterConverter.convertNumberToLetter(importeTotalFactura));
-
         if (dataModel.getTlxTipImp() == 0) {
             print = PrintGenerator.creator(
                     dataModel,
                     printTitles,
                     printValues,
                     historico,
-                    importeTotalFactura,
-                    importeMesCancelar,
                     garantiaString,
                     carDep,
                     aseoTitle,
@@ -1008,8 +991,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             print = AvisoCobro.creator(
                     dataModel,
                     historico,
-                    importeTotalFactura,
-                    importeMesCancelar,
                     printTitles,
                     printValues,
                     garantiaString,
@@ -1020,8 +1001,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         onFragmentListener.onPrinting(print);
         printValues = new ArrayList<>();
         printTitles = new ArrayList<>();
-        importeMesCancelar = 0;
-        importeTotalFactura = 0;
     }
 
     /**

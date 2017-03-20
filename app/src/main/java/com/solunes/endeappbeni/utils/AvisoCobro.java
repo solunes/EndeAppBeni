@@ -22,8 +22,6 @@ public class AvisoCobro {
 
     public static String creator(DataModel dataModel,
                                  Historico hist,
-                                 double importeTotalFactura,
-                                 double importeMesCancelar,
                                  ArrayList<String> titles,
                                  ArrayList<Double> values,
                                  String garantiaString,
@@ -32,9 +30,6 @@ public class AvisoCobro {
                                  String consejo) {
 
         String deudasEnergia = "";
-
-        Log.e(TAG, "creator: " + StringUtils.roundTwoDigits(importeTotalFactura));
-        Log.e(TAG, "creator: " + NumberToLetterConverter.convertNumberToLetter(dataModel.getTlxImpTot()));
 
         if (dataModel.getTlxDeuEneC() > 0) {
             deudasEnergia = "LEFT\r\n" +
@@ -171,19 +166,19 @@ public class AvisoCobro {
                 "RIGHT 782\r\n" +
                 "T TF01.CPF 0 720 790 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTap()) + "\r\n" +
                 "T TF01.CPF 0 720 815 " + StringUtils.roundTwoDigits(dataModel.getTlxImpAse()) + "\r\n" +
-                "T TF01.CPF 0 720 845 " + StringUtils.roundTwoDigits(importeTotalFactura) + "\r\n" +
+                "T TF01.CPF 0 720 845 " + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) + "\r\n" +
 
                 garantiaText +
 
                 "LEFT\r\n" +
-                "T TF01.CPF 0 40 940 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(importeTotalFactura)) + " \r\n" +
+                "T TF01.CPF 0 40 940 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpFac())) + " \r\n" +
                 "T HF04.CPF 0 45 970 Importe del mes a cancelar Bs.\r\n" +
                 "T HF04.CPF 0 575 970 Bs\r\n" +
 
                 "LINE 575 1000 800 1000 3\r\n" +
 
                 "RIGHT 782\r\n" +
-                "T HF04.CPF 0 720 970 " + StringUtils.roundTwoDigits(importeMesCancelar) + "\r\n" +
+                "T HF04.CPF 0 720 970 " + StringUtils.roundTwoDigits(dataModel.getTlxImpMes()) + "\r\n" +
 
                 "CENTER\r\n" +
                 "T HF02.CPF 0 0 1015 DEUDA PENDIENTE DE PAGO\n\r\n" +

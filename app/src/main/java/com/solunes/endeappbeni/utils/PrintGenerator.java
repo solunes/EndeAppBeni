@@ -23,8 +23,6 @@ public class PrintGenerator {
      * @param printTitles         un array con titulos de campos personalizados
      * @param printValues         un array con valores de los campos personalizados
      * @param historico           objeto Historico para esta impresion
-     * @param importeTotalFactura es el importe total de factura generado anteriormente
-     * @param importeMesCancelar  importe del mes a cancelar generado anteriormente
      * @param garantiaString      deposito de garantia, si no hay es null
      * @param cardep              cargo por deposito
      * @param aseoTitle           titulo de la tarifa de aseo
@@ -36,8 +34,6 @@ public class PrintGenerator {
                                  ArrayList<String> printTitles,
                                  ArrayList<Double> printValues,
                                  Historico historico,
-                                 double importeTotalFactura,
-                                 double importeMesCancelar,
                                  String garantiaString,
                                  double cardep,
                                  String aseoTitle,
@@ -157,7 +153,7 @@ public class PrintGenerator {
                 "T CONSO3.CPF 0 40 1035 Importe base para crédito fiscal: Bs\r\n" +
 
                 "RIGHT 782\r\n" +
-                "T CONSO3.CPF 0 45 881 " + StringUtils.roundTwoDigits(importeMesCancelar) + "\r\n" +
+                "T CONSO3.CPF 0 45 881 " + StringUtils.roundTwoDigits(dataModel.getTlxImpMes()) + "\r\n" +
                 "T CONSO3.CPF 0 45 968 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) + "\r\n" +
                 "T CONSO3.CPF 0 45 1035 " + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) + "\r\n" +
 
@@ -209,7 +205,7 @@ public class PrintGenerator {
                 "T CONSO1.CPF 0 720 1430 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) + "\r\n";
 
         // Bloque 3
-        cpclConfigLabel += detalleFacturacion(printTitles, printValues, cardep, importeTotalFactura, importeMesCancelar, dataModel.getTlxImpTap(), dataModel.getTlxImpAse(), garantiaString, aseoTitle, tapTitle);
+        cpclConfigLabel += detalleFacturacion(printTitles, printValues, cardep, dataModel.getTlxImpFac(), dataModel.getTlxImpMes(), dataModel.getTlxImpTap(), dataModel.getTlxImpAse(), garantiaString, aseoTitle, tapTitle);
         cpclConfigLabel += "" +
                 "FORM\r\n" +
                 "PRINT\r\n";

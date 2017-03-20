@@ -431,9 +431,9 @@ public class TestActivity extends AppCompatActivity {
 
         // obtener y calcular el importe de energia por rangos
         double importeEnergia = GenLecturas.importeEnergia(getApplicationContext(), lectura, dataModel.getTlxCtg(), dataModel.getId());
-        dataModel.setTlxImpEn(importeEnergia);
 
-        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + dataModel.getTlxImpEn() + dataModel.getTlxImpPot());
+        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + importeEnergia + dataModel.getTlxImpPot());
+        dataModel.setTlxImpEn(importeConsumo);
 
         // verificar la tarifa dignidad, calcular, guardar el importe en detalle facturacion
         double tarifaDignidad = 0;
@@ -442,6 +442,7 @@ public class TestActivity extends AppCompatActivity {
             tarifaDignidad = DetalleFactura.crearDetalle(getApplicationContext(), dataModel.getId(), 192, tarifaDignidad);
             dataModel.setTlxDesTdi(tarifaDignidad);
         }
+        dataModel.setTlxImpTotCns(dataModel.getTlxImpEn() + tarifaDignidad);
 
         // verificar que hay ley 1886 calcular su importe y guardarlo en detalle facturacion
         double ley1886 = 0;
@@ -470,7 +471,8 @@ public class TestActivity extends AppCompatActivity {
         }
 
         // calculo del importe total del suministro
-        double totalSuministro = GenLecturas.totalSuministro(totalConsumo, dataModel.getTlxLey1886(), cargoExtraTotal);
+        double totalSuministro = GenLecturas.totalSuministro(dataModel.getTlxImpTotCns(), dataModel.getTlxLey1886(), cargoExtraTotal);
+        dataModel.setTlxImpSum(totalSuministro);
 
         // calculo de suministro tap y suministro por aseo
         Pair<Double, Integer> resSuministroTap = GenLecturas.totalSuministroTap(dataModel, getApplicationContext(), importeConsumo);
@@ -489,15 +491,16 @@ public class TestActivity extends AppCompatActivity {
             }
         }
         totalSuministroAseo = DetalleFactura.crearDetalle(getApplicationContext(), dataModel.getId(), 171, totalSuministroAseo);
-        dataModel.setTlxImpFac(totalSuministro);
         dataModel.setTlxImpTap(totalSuministroTap);
         dataModel.setTlxImpAse(totalSuministroAseo);
+        double importeTotalFactura = GenLecturas.totalFacturar(totalSuministro, dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
+        dataModel.setTlxImpFac(importeTotalFactura);
 
         // calculo de importe a facturar
-        double importeTotalFactura = GenLecturas.totalFacturar(totalSuministro, dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
         double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
         dbAdapter.close();
         double importeMesCancelar = importeTotalFactura + carDep;
+        dataModel.setTlxImpMes(importeMesCancelar);
         dataModel.setTlxImpTot(GenLecturas.roundDecimal(importeMesCancelar + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI(), 1));
 //            dataModel.setTlxCodCon(getControlCode(dataModel));
         if (dataModel.getTlxTipLec() != 5) {
