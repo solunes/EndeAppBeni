@@ -312,19 +312,6 @@ public class TestActivity extends AppCompatActivity {
         int nuevaLectura;
         int lecturaKwh;
 
-        // si es mediana demanda se verifica que tiene potencia
-//        if (dataModel.getTlxTipDem() == 2 && tipoLectura != 3 && tipoLectura != 9) {
-//            if (inputPotenciaReading.getText().toString().isEmpty()) {
-//                Snackbar.make(view, "Ingresar indice de potencia", Snackbar.LENGTH_SHORT).show();
-//                return;
-//            }
-//        }
-
-        // Verificar y obtener la lectura inicial cuando sea requerida
-//        if (tipoLectura != 3 && tipoLectura != 9 && lecturaEnergia.isEmpty()) {
-//            Snackbar.make(view, "Ingresar un indice", Snackbar.LENGTH_SHORT).show();
-//            return;
-//        } else {
         // obtener lectura de energia y verificar digitos
         nuevaLectura = lecturaEnergia;
         if (nuevaLectura > dataModel.getTlxTope()) {
@@ -334,12 +321,12 @@ public class TestActivity extends AppCompatActivity {
 //        }
 
         // correccion si es que el consumo estimado tiene un indice mayor a cero, se vuelve una lectura normal
-        if (tipoLectura == 9 && nuevaLectura > 0) {
-            tipoLectura = 1;
+        if (tipoLectura == 9 && nuevaLectura == 0) {
+            tipoLectura = 3;
         }
 
         // Calcular la lectura en Kwh segun el tipo de lectura
-        if (tipoLectura == 3 || tipoLectura == 9) {
+        if (tipoLectura == 3) {
             lecturaKwh = dataModel.getTlxConPro();
         } else {
             if (nuevaLectura < dataModel.getTlxUltInd()) {
@@ -349,7 +336,6 @@ public class TestActivity extends AppCompatActivity {
             }
             lecturaKwh = GenLecturas.lecturaNormal(dataModel.getTlxUltInd(), nuevaLectura, dataModel.getTlxNroDig());
         }
-
 
         // Verificacion si el estado de cliente es cortado o suspendido y se introduce el mismo indice al anterior, se posterga
         if (dataModel.getTlxEstCli() == 3 || dataModel.getTlxEstCli() == 5) {
@@ -405,7 +391,7 @@ public class TestActivity extends AppCompatActivity {
         }
 
         // correccion para consumo promedio
-        if (tipoLectura == 3 || tipoLectura == 9) {
+        if (tipoLectura == 3) {
             dataModel.setTlxNvaLec(dataModel.getTlxUltInd());
             dataModel.setTlxKwhDev(lectura);
         } else {
@@ -414,10 +400,11 @@ public class TestActivity extends AppCompatActivity {
         dataModel.setTlxTipLec(tipoLectura);
         // multiplicar la lectura con el multiplicador de energia
         lectura = (int) (lectura * dataModel.getTlxFacMul());
+//        Log.e(TAG, "calculo: consumo " + lectura);
         dataModel.setTlxConsumo(lectura);
 
         // correccion de kwh a devolver sino es consumo promedio o lectura ajustada
-        if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3 && tipoLectura != 9) {
+        if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3) {
             lectura = lectura - dataModel.getTlxKwhDev();
             if (lectura > 0) {
                 dataModel.setTlxKwhDev(0);
@@ -428,9 +415,12 @@ public class TestActivity extends AppCompatActivity {
         }
 
         // lectura final
-        lectura = lectura + dataModel.getTlxKwhAdi();
+        if (dataModel.getTlxKwhAdi() > 0 && tipoLectura != 3) {
+            lectura = lectura + dataModel.getTlxKwhAdi();
+            dataModel.setTlxKwhAdi(0);
+        }
         dataModel.setTlxConsFacturado(lectura);
-        dataModel.setTlxKwhAdi(0);
+//        Log.e(TAG, "calculo: lectura final " + lectura);
 
         // obtener cargo fijo de la base de datos para la categoria
         double cargoFijo = dbAdapter.getCargoFijo(dataModel.getTlxCtg());
@@ -609,13 +599,10 @@ public class TestActivity extends AppCompatActivity {
 
             @Override
             protected Boolean doInBackground(Boolean... booleen) {
-                //                ArrayList<Integer> integers = new ArrayList<>();
-//                integers.add(4371);
-//                integers.add(5075);
-//                integers.add(1968);
-//                integers.add(4277);
-//                integers.add(5711);
-//                integers.add(5903);
+//                ArrayList<Integer> integers = new ArrayList<>();
+//                integers.add(2985);
+//                integers.add(3036);
+//                integers.add(5529);
 //                for (int id : integers) {
 //                    DataModel data = dbAdapter.getData(id);
 //                    Resultados dataRes = dbAdapter.getDataRes(data.getId());
