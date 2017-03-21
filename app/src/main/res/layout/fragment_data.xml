@@ -116,18 +116,18 @@
                     </LinearLayout>
 
                     <!--<View-->
-                        <!--android:layout_width="match_parent"-->
-                        <!--android:layout_height="1dp"-->
-                        <!--android:layout_marginBottom="8dp"-->
-                        <!--android:layout_marginTop="8dp"-->
-                        <!--android:background="#e7e7e7" />-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="1dp"-->
+                    <!--android:layout_marginBottom="8dp"-->
+                    <!--android:layout_marginTop="8dp"-->
+                    <!--android:background="#e7e7e7" />-->
 
                     <TextView
                         android:id="@+id/support_ultind"
                         android:layout_width="wrap_content"
-                        android:visibility="gone"
                         android:layout_height="wrap_content"
-                        android:text="Último índice: " />
+                        android:text="Último índice: "
+                        android:visibility="gone" />
 
                     <View
                         android:layout_width="match_parent"
@@ -211,7 +211,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:backgroundTint="@color/colorPrimary"
-                            android:hint="Lectura Energía"
+                            android:hint="Lectura En"
                             android:inputType="number" />
 
                         <EditText
@@ -220,9 +220,16 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:backgroundTint="@color/colorPrimary"
-                            android:hint="Lectura Potencia"
+                            android:hint="Lectura Pot"
                             android:inputType="number"
                             android:visibility="gone" />
+
+                        <Button
+                            android:id="@+id/button_postergar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:backgroundTint="@color/colorAccent"
+                            android:text="@string/postergar_lectura" />
 
                     </LinearLayout>
 

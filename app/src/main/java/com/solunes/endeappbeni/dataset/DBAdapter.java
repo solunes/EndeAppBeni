@@ -23,6 +23,7 @@ import com.solunes.endeappbeni.models.LimitesMaximos;
 import com.solunes.endeappbeni.models.MedEntreLineas;
 import com.solunes.endeappbeni.models.Obs;
 import com.solunes.endeappbeni.models.Parametro;
+import com.solunes.endeappbeni.models.PrintObs;
 import com.solunes.endeappbeni.models.PrintObsData;
 import com.solunes.endeappbeni.models.Resultados;
 import com.solunes.endeappbeni.models.Tarifa;
@@ -544,6 +545,19 @@ public class DBAdapter {
         return cursor;
     }
 
+    public PrintObs getPrintObs(int idObs) {
+        open();
+        Cursor cursor = db.query(DBHelper.PRINT_OBS_TABLE, null, PrintObs.Columns.id.name() + " = " + idObs, null, null, null, null);
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            PrintObs printObs = PrintObs.fromCursor(cursor);
+            cursor.close();
+            return printObs;
+        }
+        cursor.close();
+        return null;
+    }
+
     /**
      * Obtiene una lista de observaciones de impresion de un dato
      */
@@ -723,7 +737,7 @@ public class DBAdapter {
             factaRUPorcent = cursor.getDouble(Factasrut.Columns.porcentaje.ordinal());
         }
 
-        importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent,1);
+        importeTAP = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
 
         if (getParametroValor(Parametro.Values.factura_aseo.name()) > 0) {
             factaRuAseo = -1;
@@ -775,7 +789,7 @@ public class DBAdapter {
                     }
                 }
             } else {
-                importeTas = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent,1);
+                importeTas = GenLecturas.roundDecimal(importeConsumo * factaRUPorcent, 1);
             }
         }
         cursor.close();

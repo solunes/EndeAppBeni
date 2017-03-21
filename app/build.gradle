@@ -8,11 +8,25 @@ android {
         minSdkVersion 22
         targetSdkVersion 23
         versionCode 1
-        versionName "1.5.2"
+        versionName "1.6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        release {
+            try {
+                storeFile file("ende.jks")
+                storePassword KEYSTORE_PASSWORD
+                keyAlias "ende"
+                keyPassword KEY_PASSWORD
+            }
+            catch (ex) {
+                throw new InvalidUserDataException("You should define KEYSTORE_PASSWORD and KEY_PASSWORD in gradle.properties.")
+            }
+        }
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
