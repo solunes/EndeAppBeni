@@ -200,7 +200,7 @@ public class AvisoCobro {
                 "T TF01.CPF 0 40 1240 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "LINE 575 1245 800 1245 3\r\n" +
                 "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 1220 " + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) + "\r\n" +
+                "T TF01.CPF 0 720 1220 " + StringUtils.roundTwoDigits(dataModel.getTlxImpSum()) + "\r\n" +
 
                 "LEFT\r\n" +
                 "T HF06_1.CPF 0 75 1260 HISTÓRICO\r\n" +

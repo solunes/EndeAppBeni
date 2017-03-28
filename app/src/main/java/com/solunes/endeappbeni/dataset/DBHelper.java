@@ -217,6 +217,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "TlxConsFacturado numeric, " +
                 "TlxDebAuto text, " +
                 "TlxRecordatorio text, " +
+                "TlxImpEnergia decimal(15, 2), " +
                 "estado_lectura integer, " +
                 "enviado integer)");
 

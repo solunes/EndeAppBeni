@@ -29,6 +29,7 @@ import com.solunes.endeappbeni.models.DetalleFactura;
 import com.solunes.endeappbeni.models.Historico;
 import com.solunes.endeappbeni.models.MedEntreLineas;
 import com.solunes.endeappbeni.models.Parametro;
+import com.solunes.endeappbeni.models.Resultados;
 import com.solunes.endeappbeni.models.User;
 import com.solunes.endeappbeni.networking.CallbackAPI;
 import com.solunes.endeappbeni.networking.GetRequest;
@@ -209,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
                             public void run() {
                                 boolean response = false;
                                 try {
-                                    response = processResponse(result);
+                                    response = processResponse(getApplicationContext(), result);
                                 } catch (JSONException e) {
                                     Log.e(TAG, "onSuccess: ", e);
                                 }
@@ -384,9 +385,9 @@ public class MainActivity extends AppCompatActivity {
      * @return retorna true si se hay datos para guardar
      * @throws JSONException lanza una excepcion si el formato del string result no es json
      */
-    private boolean processResponse(String result) throws JSONException {
+    public static boolean processResponse(Context context, String result) throws JSONException {
         JSONArray results = new JSONArray(result);
-        DBAdapter dbAdapter = new DBAdapter(this);
+        DBAdapter dbAdapter = new DBAdapter(context);
         dbAdapter.beforeDownloadData();
         for (int i = 0; i < results.length(); i++) {
             JSONObject object = results.getJSONObject(i);
@@ -504,6 +505,19 @@ public class MainActivity extends AppCompatActivity {
                 dbAdapter.saveObject(DBHelper.HISTORICO_TABLE, valuesH);
             } catch (Exception e) {
                 Log.e(TAG, "historico nulo", e);
+            }
+
+            try {
+                JSONObject resultado = object.getJSONObject("resultados");
+                ContentValues valuesRes = new ContentValues();
+                valuesRes.put(Resultados.Columns.id.name(), resultado.getInt(Resultados.Columns.id.name()));
+                valuesRes.put(Resultados.Columns.general_id.name(), resultado.getInt(Resultados.Columns.general_id.name()));
+                valuesRes.put(Resultados.Columns.lectura.name(), resultado.getInt(Resultados.Columns.lectura.name()));
+                valuesRes.put(Resultados.Columns.lectura_potencia.name(), resultado.getDouble(Resultados.Columns.lectura_potencia.name()));
+                valuesRes.put(Resultados.Columns.observacion.name(), resultado.getDouble(Resultados.Columns.observacion.name()));
+                dbAdapter.saveObject(DBHelper.RESULTADOS_TABLE, valuesRes);
+            } catch (Exception e) {
+                Log.e(TAG, "processResponse: no hay resultados");
             }
 
             JSONArray detalleFacturaArray = object.getJSONArray("detalle_factura");
@@ -715,7 +729,7 @@ public class MainActivity extends AppCompatActivity {
         newMedidor.show();
     }
 
-    private ContentValues stringNull(String key, String string) {
+    private static ContentValues stringNull(String key, String string) {
         ContentValues values = new ContentValues();
         if (string.equalsIgnoreCase("null")) {
             values.putNull(key);

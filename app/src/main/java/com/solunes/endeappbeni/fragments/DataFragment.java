@@ -42,7 +42,6 @@ import com.solunes.endeappbeni.models.User;
 import com.solunes.endeappbeni.utils.AvisoCobro;
 import com.solunes.endeappbeni.utils.FileUtils;
 import com.solunes.endeappbeni.utils.GenLecturas;
-import com.solunes.endeappbeni.utils.NumberToLetterConverter;
 import com.solunes.endeappbeni.utils.PrintGenerator;
 import com.solunes.endeappbeni.utils.SingleChoiceItem;
 import com.solunes.endeappbeni.utils.StringUtils;
@@ -383,7 +382,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             @Override
             public void afterTextChanged(Editable editable) {
                 if (editable.toString().isEmpty()) {
-                    labelObs.setText("Ninguno");
+                    labelObs.setText("NINGUNO");
                     return;
                 }
                 DBAdapter dbAdapter = new DBAdapter(getContext());
@@ -411,16 +410,19 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     cvData.put(DataModel.Columns.enviado.name(), DataModel.EstadoEnviado.no_enviado.ordinal());
                     dbAdapter.saveObject(DBHelper.PRINT_OBS_DATA_TABLE, contentValues);
                     dbAdapter.updateData(dataModel.getId(), cvData);
+                    buttonPostergar.setEnabled(false);
                 } else {
-                    dataModel.setEstadoLectura(estados_lectura.Postergado.ordinal());
-                    dataModel.setTlxTipLec(5);
-                    hidingViews(null);
+                    dataModel.setEstadoLectura(estados_lectura.PostergadoTmp.ordinal());
+                    buttonPostergar.setEnabled(false);
+                    estadoMedidor.setText("Postergado Temp.");
+                    estadoMedidor.setTextColor(getResources().getColor(R.color.colorPostponed));
 
                     DBAdapter dbAdapter = new DBAdapter(getContext());
                     ContentValues cv = new ContentValues();
                     cv.put(DataModel.Columns.estado_lectura.name(), dataModel.getEstadoLectura());
                     cv.put(DataModel.Columns.TlxTipLec.name(), dataModel.getTlxTipLec());
                     dbAdapter.updateData(dataModel.getId(), cv);
+                    onFragmentListener.onNextPage();
                 }
             }
         });
@@ -485,6 +487,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         autoObs = new ArrayList<>();
         // Alertas de consumo bajo, consumo elevado y giro de medidor
         boolean isAlert = false;
+        boolean isPostergado = false;
+        if (tipoLectura == 5) {
+            isPostergado = true;
+        }
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Alerta!");
         if (dataModel.getTlxCliNew() == 0) {
@@ -522,12 +528,18 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         if (dataModel.getTlxEstCli() == 3 || dataModel.getTlxEstCli() == 5) {
             if (dataModel.getTlxUltInd() == nuevaLectura) {
                 tipoLectura = 5;
+                isPostergado = true;
             }
+        }
+
+        if (isPostergado) {
+            isAlert = false;
         }
 
         final int finalLecturaKwh = lecturaKwh;
         final int finalNuevaLectura = nuevaLectura;
         final int finalTipoLectura = tipoLectura;
+
         builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -536,7 +548,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         });
 
         // si hay alerta y el tipo de lectura no es postergada
-        if (isAlert && tipoLectura != 5) {
+        if (isAlert) {
             builder.show();
         } else {
             confirmarLectura(finalTipoLectura, finalNuevaLectura, finalLecturaKwh, obs, view);
@@ -585,7 +597,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         hidingViews(obs);
         onFragmentListener.onAjusteOrden(dataModel.getId());
-        saveLectura(obs);
+        saveLectura(getContext(), obs);
         Snackbar.make(view, "No se imprime factura", Snackbar.LENGTH_LONG).show();
     }
 
@@ -600,12 +612,24 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      */
     private void confirmarLectura(int finalTipoLectura, int finalNuevaLectura, int finalLecturaKwh, Obs obs, View view) {
         Log.e(TAG, "confirmarLectura: calculo");
-        boolean isCalculo = calculo(finalTipoLectura, finalNuevaLectura, finalLecturaKwh, false, obs);
+        int potenciaLeida = 0;
+        if (!inputPotenciaReading.getText().toString().isEmpty()) {
+            potenciaLeida = Integer.valueOf(inputPotenciaReading.getText().toString());
+        }
+        boolean isCalculo = calculo(getContext(),
+                dataModel,
+                finalTipoLectura,
+                finalNuevaLectura,
+                finalLecturaKwh,
+                potenciaLeida,
+                obs);
         if (isCalculo) {
+            printArrays();
             hidingViews(obs);
             onFragmentListener.onAjusteOrden(dataModel.getId());
-            saveLectura(obs);
+            saveLectura(getContext(), obs);
             printFactura(view);
+            onFragmentListener.onNextPage();
         }
     }
 
@@ -615,164 +639,115 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      * @param tipoLectura  Este campo tiene el tipo de lectura
      * @param nuevaLectura Esta es la nueva lectura en kwh para guardar
      * @param lectura      Esta es la lectura a facturar
-     * @param reprint      un booleano para saber si se va a imprimir
      * @param obs          la observacion de la lectura
      */
-    private boolean calculo(int tipoLectura, int nuevaLectura, int lectura, boolean reprint, Obs obs) {
-        DBAdapter dbAdapter = new DBAdapter(getContext());
-        double importeEnergia = 0;
+    public static boolean calculo(Context context,
+                                  DataModel dataModel,
+                                  int tipoLectura,
+                                  int nuevaLectura,
+                                  int lectura,
+                                  int potenciaLeida,
+                                  Obs obs) {
+        DBAdapter dbAdapter = new DBAdapter(context);
         // revisar si no es reimpresion, para no realizar el calculo de nuevo
-        if (!reprint) {
-            if (obs.getObsFac() == 0) {
-                dataModel.setTlxImpAvi(0);
-            }
-
-            if (tipoLectura == 5) {
-                dataModel.setTlxNvaLec(nuevaLectura);
-                if (dataModel.getTlxTipDem() == 2) {
-                    int potenciaLeida = 0;
-                    if (!inputPotenciaReading.getText().toString().isEmpty()) {
-                        potenciaLeida = Integer.valueOf(inputPotenciaReading.getText().toString());
-                    }
-                    potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
-                    dataModel.setTlxPotLei(potenciaLeida);
-                }
-                dataModel.setTlxTipLec(tipoLectura);
-                dataModel.setTlxImpAvi(0);
-                return true;
-            }
-
-            // correccion para consumo promedio
-            if (tipoLectura == 3) {
-                dataModel.setTlxKwhDev(lectura);
-            }
-
-            dataModel.setTlxNvaLec(nuevaLectura);
-            dataModel.setTlxTipLec(tipoLectura);
-            dataModel.setTlxConsumo(lectura);
-
-            // multiplicar la lectura con el multiplicador de energia
-            lectura = (int) (lectura * dataModel.getTlxFacMul());
-
-            // correccion de kwh a devolver sino es consumo promedio o lectura ajustada
-            if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3) {
-                lectura = lectura - dataModel.getTlxKwhDev();
-                if (lectura > 0) {
-                    dataModel.setTlxKwhDev(0);
-                } else {
-                    dataModel.setTlxKwhDev(Math.abs(lectura));
-                    lectura = 0;
-                }
-            }
-
-            // lectura final
-            if (dataModel.getTlxKwhAdi() > 0 && tipoLectura != 3) {
-                lectura = lectura + dataModel.getTlxKwhAdi();
-                dataModel.setTlxKwhAdi(0);
-            }
-            dataModel.setTlxConsFacturado(lectura);
-
-            // obtener cargo fijo de la base de datos para la categoria
-            double cargoFijo = dbAdapter.getCargoFijo(dataModel.getTlxCtg());
-            // redondeo del cargo fijo
-            cargoFijo = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 1, cargoFijo);
-            dataModel.setTlxCarFij(cargoFijo);
-
-            // obtener y calcular el importe de energia por rangos
-            importeEnergia = GenLecturas.importeEnergia(getContext(), lectura, dataModel.getTlxCtg(), dataModel.getId());
+        if (obs.getObsFac() == 0) {
+            dataModel.setTlxImpAvi(0);
         }
 
-        // agregar cargo fijo y energia al array de impresion
-//        printTitles.add(dbAdapter.getItemDescription(1));
-//        printValues.add(GenLecturas.round(dataModel.getTlxCarFij()));
-        printTitles.add("Importe por energía");
-        printValues.add(GenLecturas.round(dataModel.getTlxImpEn() + dataModel.getTlxCarFij()));
+        if (tipoLectura == 5) {
+            dataModel.setTlxNvaLec(nuevaLectura);
+            if (dataModel.getTlxTipDem() == 2) {
+                potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
+                dataModel.setTlxPotLei(potenciaLeida);
+            }
+            dataModel.setTlxTipLec(tipoLectura);
+            dataModel.setTlxImpAvi(0);
+            return true;
+        }
+
+        // correccion para consumo promedio
+        if (tipoLectura == 3) {
+            dataModel.setTlxKwhDev(lectura);
+        }
+
+        // multiplicar la lectura con el multiplicador de energia
+        lectura = (int) (lectura * dataModel.getTlxFacMul());
+
+        dataModel.setTlxNvaLec(nuevaLectura);
+        dataModel.setTlxTipLec(tipoLectura);
+        dataModel.setTlxConsumo(lectura);
+
+        // correccion de kwh a devolver sino es consumo promedio o lectura ajustada
+        if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3) {
+            lectura = lectura - dataModel.getTlxKwhDev();
+            if (lectura > 0) {
+                dataModel.setTlxKwhDev(0);
+            } else {
+                dataModel.setTlxKwhDev(Math.abs(lectura));
+                lectura = 0;
+            }
+        }
+
+        // lectura final
+        if (dataModel.getTlxKwhAdi() > 0 && tipoLectura != 3) {
+            lectura = lectura + dataModel.getTlxKwhAdi();
+            dataModel.setTlxKwhAdi(0);
+        }
+        dataModel.setTlxConsFacturado(lectura);
+
+        // obtener cargo fijo de la base de datos para la categoria
+        double cargoFijo = dbAdapter.getCargoFijo(dataModel.getTlxCtg());
+        // redondeo del cargo fijo
+        cargoFijo = DetalleFactura.crearDetalle(context, dataModel.getId(), 1, cargoFijo);
+        dataModel.setTlxCarFij(cargoFijo);
+
+        // obtener y calcular el importe de energia por rangos
+        double importeEnergia = GenLecturas.importeEnergia(context, lectura, dataModel.getTlxCtg(), dataModel.getId());
+        dataModel.setTlxImpEnergia(importeEnergia);
 
         // calculo de potencia para mediana demanda
         double importePotencia = 0;
         if (dataModel.getTlxTipDem() == 2) {
-            if (!reprint) {
-                // correccion de digitos para la potencia leida
-                int potenciaLeida = 0;
-                if (!inputPotenciaReading.getText().toString().isEmpty()) {
-                    potenciaLeida = Integer.valueOf(inputPotenciaReading.getText().toString());
-                }
-                potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
-                dataModel.setTlxPotLei(potenciaLeida);
-                // maximo entre potencia anterior y potencia leida
-                int potMax = Math.max(potenciaLeida, dataModel.getTlxPotFac());
-                // calculo del importe por potencia
-                double cargoPotencia = dbAdapter.getCargoPotencia(dataModel.getTlxCtg());
-                if (cargoPotencia == -1) {
-                    Toast.makeText(getContext(), "No hay cargo de potencia", Toast.LENGTH_LONG).show();
-                    return false;
-                }
-                importePotencia = potMax * cargoPotencia;
-                importePotencia = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 41, importePotencia);
-                dataModel.setTlxImpPot(importePotencia);
+            // correccion de digitos para la potencia leida
+            potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
+            dataModel.setTlxPotLei(potenciaLeida);
+            // maximo entre potencia anterior y potencia leida
+            int potMax = Math.max(potenciaLeida, dataModel.getTlxPotFac());
+            // calculo del importe por potencia
+            double cargoPotencia = dbAdapter.getCargoPotencia(dataModel.getTlxCtg());
+            if (cargoPotencia == -1) {
+                Toast.makeText(context, "No hay cargo de potencia", Toast.LENGTH_LONG).show();
+                return false;
             }
-
-            // agregar el importe por potencia al array de impresion
-            printTitles.add(dbAdapter.getItemDescription(41));
-            printValues.add(GenLecturas.round(dataModel.getTlxImpPot()));
+            importePotencia = potMax * cargoPotencia;
+            importePotencia = DetalleFactura.crearDetalle(context, dataModel.getId(), 41, importePotencia);
+            dataModel.setTlxImpPot(importePotencia);
         }
 
-
-        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + importeEnergia + dataModel.getTlxImpPot());
+        double importeConsumo = GenLecturas.round(dataModel.getTlxCarFij() + dataModel.getTlxImpEnergia() + dataModel.getTlxImpPot());
         dataModel.setTlxImpEn(importeConsumo);
-        // agregar importe por consumo al array de impresion
-//        printTitles.add("Importe por consumo");
-//        printValues.add(importeConsumo);
 
-        // verificar la tarifa dignidad, calcular, guardar el importe en detalle facturacion
         double tarifaDignidad = 0;
         if (dataModel.getTlxDignidad() == 1) {
-            if (!reprint) {
-                tarifaDignidad = GenLecturas.tarifaDignidad(getContext(), lectura, importeConsumo);
-                tarifaDignidad = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 192, tarifaDignidad);
-                dataModel.setTlxDesTdi(tarifaDignidad);
-            }
-
-            // agregar descuento por dignidad al array de impresion
-            printTitles.add(dbAdapter.getItemDescription(192));
-            printValues.add(dataModel.getTlxDesTdi());
+            tarifaDignidad = GenLecturas.tarifaDignidad(context, lectura, dataModel.getTlxImpEn());
+            tarifaDignidad = DetalleFactura.crearDetalle(context, dataModel.getId(), 192, tarifaDignidad);
+            dataModel.setTlxDesTdi(tarifaDignidad);
         }
         dataModel.setTlxImpTotCns(dataModel.getTlxImpEn() + tarifaDignidad);
 
         // verificar que hay ley 1886 calcular su importe y guardarlo en detalle facturacion
         double ley1886 = 0;
         if (dataModel.getTlxLeyTag() == 1) {
-            if (!reprint) {
-                ley1886 = GenLecturas.ley1886(getContext(), lectura, dataModel.getTlxCtg());
-                ley1886 = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 195, ley1886);
-                dataModel.setTlxLey1886(ley1886);
-            }
-
-            // agregar ley 1886 al array de impresion
-            printTitles.add(dbAdapter.getItemDescription(195));
-            printValues.add(dataModel.getTlxLey1886());
+            ley1886 = GenLecturas.ley1886(context, lectura, dataModel.getTlxCtg());
+            ley1886 = DetalleFactura.crearDetalle(context, dataModel.getId(), 195, ley1886);
+            dataModel.setTlxLey1886(ley1886);
         }
 
-        // agregar consumo total al array de impresion
-//        printTitles.add("Importe total por consumo");
-//        printValues.add(totalConsumo);
-
-        // array de ids de items facturacion de detalle facturacion
-        // se pueden agregar mas cargos al array usando el item_facturacion_id
-        ArrayList<Integer> integers = new ArrayList<>();
-        integers.add(461); // intereses por mora
-        integers.add(181); // cargo por conexion
-        integers.add(186); // cargo por reconexion
-        integers.add(185); // cargo por rehabilitacion
         double cargoExtraTotal = 0;
-        for (Integer itemId : integers) {
+        for (Integer itemId : arrayCargos1()) {
             double cargoExtra = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), itemId);
-            cargoExtra = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), itemId, cargoExtra);
+            cargoExtra = DetalleFactura.crearDetalle(context, dataModel.getId(), itemId, cargoExtra);
             cargoExtraTotal += cargoExtra;
-            if (cargoExtra > 0) {
-                printTitles.add(dbAdapter.getItemDescription(itemId));
-                printValues.add(cargoExtra);
-            }
         }
 
         // calculo del importe total del suministro
@@ -781,48 +756,107 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         double importeTotalFactura = 0;
         // calculo de suministro tap y suministro por aseo
-        if (!reprint) {
-            Pair<Double, Integer> resSuministroTap = GenLecturas.totalSuministroTap(dataModel, getContext(), importeConsumo);
-            double totalSuministroTap = resSuministroTap.first;
-            if (totalSuministroTap < 0) {
-                Toast.makeText(getContext(), "No hay tarifa para el TAP", Toast.LENGTH_LONG).show();
+        Pair<Double, Integer> resSuministroTap = GenLecturas.totalSuministroTap(dataModel, context, importeConsumo);
+        double totalSuministroTap = resSuministroTap.first;
+        if (totalSuministroTap < 0) {
+            Toast.makeText(context, "No hay tarifa para el TAP", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        totalSuministroTap = DetalleFactura.crearDetalle(context, dataModel.getId(), 153, totalSuministroTap);
+        double totalSuministroAseo = 0;
+        if (resSuministroTap.second < 0) {
+            totalSuministroAseo = GenLecturas.totalSuministroAseo(dataModel, context, importeConsumo);
+            if (totalSuministroAseo == -1) {
+                Toast.makeText(context, "No hay tarifa para el aseo", Toast.LENGTH_LONG).show();
                 return false;
             }
-            totalSuministroTap = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 153, totalSuministroTap);
-            double totalSuministroAseo = 0;
-            if (resSuministroTap.second < 0) {
-                totalSuministroAseo = GenLecturas.totalSuministroAseo(dataModel, getContext(), importeConsumo);
-                if (totalSuministroAseo == -1) {
-                    Toast.makeText(getContext(), "No hay tarifa para el aseo", Toast.LENGTH_LONG).show();
-                    return false;
-                }
-            }
-            totalSuministroAseo = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), 171, totalSuministroAseo);
-            dataModel.setTlxImpTap(totalSuministroTap);
-            dataModel.setTlxImpAse(totalSuministroAseo);
-            importeTotalFactura = GenLecturas.totalFacturar(totalSuministro, dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
-            dataModel.setTlxImpFac(importeTotalFactura);
         }
-        // agregar total por el suministro al array de impresion
-        printTitles.add("Importe Total Suministro");
-        printValues.add(dataModel.getTlxImpSum());
+        totalSuministroAseo = DetalleFactura.crearDetalle(context, dataModel.getId(), 171, totalSuministroAseo);
+        dataModel.setTlxImpTap(totalSuministroTap);
+        dataModel.setTlxImpAse(totalSuministroAseo);
+        importeTotalFactura = GenLecturas.totalFacturar(dataModel.getTlxImpSum(), dataModel.getTlxImpTap(), dataModel.getTlxImpAse());
+        dataModel.setTlxImpFac(importeTotalFactura);
 
-        // calculo de importe a facturar
-        if (!reprint) {
-            double carDep = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), 427);
-            double importeMesCancelar = importeTotalFactura + carDep;
-            dataModel.setTlxImpMes(importeMesCancelar);
-            dataModel.setTlxImpTot(GenLecturas.round(importeMesCancelar + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI()));
-            dataModel.setTlxCodCon(getControlCode(dataModel));
-            if (dataModel.getTlxTipLec() != 5) {
-                dataModel.setEstadoLectura(estados_lectura.Leido.ordinal());
-            } else {
-                dataModel.setEstadoLectura(estados_lectura.Postergado.ordinal());
-            }
+        double cargosTotal2 = 0;
+        for (Integer itemId : arrayCargos2()) {
+            double cargoExtra = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), itemId);
+            cargoExtra = DetalleFactura.crearDetalle(context, dataModel.getId(), itemId, cargoExtra);
+            cargosTotal2 += cargoExtra;
+        }
+        double importeMesCancelar = dataModel.getTlxImpFac() + cargosTotal2;
+        dataModel.setTlxImpMes(importeMesCancelar);
+        dataModel.setTlxImpTot(GenLecturas.round(importeMesCancelar + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI()));
+        dataModel.setTlxCodCon(getControlCode(context, dataModel));
+        if (dataModel.getTlxTipLec() != 5) {
+            dataModel.setEstadoLectura(estados_lectura.Leido.ordinal());
+        } else {
+            dataModel.setEstadoLectura(estados_lectura.Postergado.ordinal());
         }
         dbAdapter.close();
         return true;
     }
+
+    private void printArrays() {
+        DBAdapter dbAdapter = new DBAdapter(getContext());
+
+        printTitles.add("Importe por energía");
+        printValues.add(GenLecturas.round(dataModel.getTlxImpEnergia() + dataModel.getTlxCarFij()));
+
+        // calculo de potencia para mediana demanda
+        if (dataModel.getTlxTipDem() == 2) {
+            // agregar el importe por potencia al array de impresion
+            printTitles.add(dbAdapter.getItemDescription(41));
+            printValues.add(GenLecturas.round(dataModel.getTlxImpPot()));
+        }
+
+        if (dataModel.getTlxDignidad() == 1) {
+            // agregar descuento por dignidad al array de impresion
+            if (dataModel.getTlxDesTdi() < 0) {
+                printTitles.add(dbAdapter.getItemDescription(192));
+                printValues.add(dataModel.getTlxDesTdi());
+            }
+        }
+
+        // verificar que hay ley 1886 calcular su importe y guardarlo en detalle facturacion
+        if (dataModel.getTlxLeyTag() == 1) {
+            // agregar ley 1886 al array de impresion
+            if (dataModel.getTlxLey1886() < 0) {
+                printTitles.add(dbAdapter.getItemDescription(195));
+                printValues.add(dataModel.getTlxLey1886());
+            }
+        }
+
+        for (Integer itemId : arrayCargos1()) {
+            double cargoExtra = dbAdapter.getDetalleFacturaImporte(dataModel.getId(), itemId);
+            cargoExtra = DetalleFactura.crearDetalle(getContext(), dataModel.getId(), itemId, cargoExtra);
+            if (cargoExtra > 0) {
+                printTitles.add(dbAdapter.getItemDescription(itemId));
+                printValues.add(cargoExtra);
+            }
+        }
+
+        // agregar total por el suministro al array de impresion
+        printTitles.add("Importe Total Suministro");
+        printValues.add(dataModel.getTlxImpSum());
+
+        dbAdapter.close();
+    }
+
+    private static ArrayList<Integer> arrayCargos1() {
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(461); // intereses por mora
+        integers.add(181); // cargo por conexion
+        integers.add(186); // cargo por reconexion
+        integers.add(185); // cargo por rehabilitacion
+        return integers;
+    }
+
+    private static ArrayList<Integer> arrayCargos2() {
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(427); // deposito de garantia
+        return integers;
+    }
+
 
     /**
      * Este metodo oculta las vistas dependiendo a los estados de lectura y muestra el estado en pantalla
@@ -868,7 +902,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             estadoMedidor.setText(estados_lectura.Leido.name() + " - " + impaviString);
             estadoMedidor.setTextColor(getResources().getColor(R.color.colorPrint));
             buttonConfirm.setText(R.string.re_print);
-            buttonPostergar.setText(R.string.postergar_lectura);
+            buttonPostergar.setText(R.string.postergar_impresion);
             inputPotenciaReading.setEnabled(false);
             inputPreNue1.setEnabled(false);
             inputPreNue2.setEnabled(false);
@@ -887,8 +921,33 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      *
      * @param obs Observacion de la lectura
      */
-    private void saveLectura(Obs obs) {
-        DBAdapter dbAdapter = new DBAdapter(getContext());
+    private void saveLectura(Context context, Obs obs) {
+        saveDataModel(context, dataModel, obs);
+
+        saveAutoObs();
+
+        onFragmentListener.onTabListener();
+        Map<String, ?> all = PreferenceManager.getDefaultSharedPreferences(getActivity()).getAll();
+        JSONObject jsonObject = new JSONObject(all);
+        FileUtils.exportDB(getActivity(), jsonObject.toString(), new FileUtils.FileUtilsCallback() {
+            @Override
+            public void suceess() {
+            }
+
+            @Override
+            public void error() {
+                Snackbar.make(inputPotenciaReading, "Error al exportar a SD", Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void noSD() {
+                Snackbar.make(inputPotenciaReading, "No se encuentra una tarjeta SD", Snackbar.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public static void saveDataModel(Context context, DataModel dataModel, Obs obs) {
+        DBAdapter dbAdapter = new DBAdapter(context);
 
         ContentValues cv = new ContentValues();
         Calendar calendar = Calendar.getInstance();
@@ -900,6 +959,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         cv.put(DataModel.Columns.TlxConsFacturado.name(), dataModel.getTlxConsFacturado());
         cv.put(DataModel.Columns.TlxImpTot.name(), dataModel.getTlxImpTot());
         cv.put(DataModel.Columns.TlxImpPot.name(), dataModel.getTlxImpPot());
+        cv.put(DataModel.Columns.TlxImpEnergia.name(), dataModel.getTlxImpEnergia());
 
         cv.put(DataModel.Columns.TlxDesTdi.name(), dataModel.getTlxDesTdi());
         cv.put(DataModel.Columns.TlxLey1886.name(), dataModel.getTlxLey1886());
@@ -925,7 +985,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         cv.put(DataModel.Columns.TlxHoraBajo.name(), dataModel.getTlxHoraBajo());
         cv.put(DataModel.Columns.TlxFechaBajo.name(), dataModel.getTlxFechaBajo());
 
+        cv.put(DataModel.Columns.TlxImpTotCns.name(), dataModel.getTlxImpTotCns());
+        cv.put(DataModel.Columns.TlxImpSum.name(), dataModel.getTlxImpSum());
         cv.put(DataModel.Columns.TlxImpFac.name(), dataModel.getTlxImpFac());
+        cv.put(DataModel.Columns.TlxImpMes.name(), dataModel.getTlxImpMes());
         cv.put(DataModel.Columns.TlxCarFij.name(), dataModel.getTlxCarFij());
         cv.put(DataModel.Columns.TlxImpTap.name(), dataModel.getTlxImpTap());
         cv.put(DataModel.Columns.TlxImpAse.name(), dataModel.getTlxImpAse());
@@ -943,33 +1006,19 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         cv.put(DataObs.Columns.general_id.name(), dataModel.getId());
         cv.put(DataObs.Columns.observacion_id.name(), obs.getId());
         dbAdapter.saveObject(DBHelper.DATA_OBS_TABLE, cv);
+        dbAdapter.close();
+    }
 
+    private void saveAutoObs() {
+        ContentValues cv;
+        DBAdapter dbAdapter = new DBAdapter(getContext());
         for (Integer idObs : autoObs) {
             cv = new ContentValues();
             cv.put(DataObs.Columns.general_id.name(), dataModel.getId());
             cv.put(DataObs.Columns.observacion_id.name(), idObs);
             dbAdapter.saveObject(DBHelper.DATA_OBS_TABLE, cv);
         }
-
         dbAdapter.close();
-        onFragmentListener.onTabListener();
-        Map<String, ?> all = PreferenceManager.getDefaultSharedPreferences(getActivity()).getAll();
-        JSONObject jsonObject = new JSONObject(all);
-        FileUtils.exportDB(getActivity(), jsonObject.toString(), new FileUtils.FileUtilsCallback() {
-            @Override
-            public void suceess() {
-            }
-
-            @Override
-            public void error() {
-                Snackbar.make(inputPotenciaReading, "Error al exportar a SD", Snackbar.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void noSD() {
-                Snackbar.make(inputPotenciaReading, "No se encuentra una tarjeta SD", Snackbar.LENGTH_SHORT).show();
-            }
-        });
     }
 
     /**
@@ -1066,7 +1115,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 cvData.put(DataModel.Columns.enviado.name(), DataModel.EstadoEnviado.no_enviado.ordinal());
                 dbAdapter.updateData(dataModel.getId(), cvData);
 
-                calculo(0, 0, 0, true, null);
+                printArrays();
 
                 sendPrint();
             }
@@ -1102,6 +1151,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             buttonConfirm.setEnabled(false);
             buttonPostergar.setEnabled(false);
             estadoMedidor.setText(estados_lectura.Postergado.name() + " - " + impaviString);
+            estadoMedidor.setTextColor(getResources().getColor(R.color.colorPostponed));
+        } else if (dataModel.getEstadoLectura() == 3) {
+            estadoMedidor.setText("Postergado Temp.");
+            buttonPostergar.setEnabled(false);
             estadoMedidor.setTextColor(getResources().getColor(R.color.colorPostponed));
         } else {
             estadoMedidor.setText(estados_lectura.Pendiente.name());
@@ -1175,6 +1228,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         void onPrinting(String srcToPrint);
 
         void onAjusteOrden(int idData);
+
+        void onNextPage();
     }
 
     /**
@@ -1343,9 +1398,9 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      *
      * @return Un string con el codigo de control generado
      */
-    private String getControlCode(DataModel dataModel) {
+    private static String getControlCode(Context context, DataModel dataModel) {
         ControlCode controlCode = new ControlCode();
-        DBAdapter dbAdapter = new DBAdapter(getContext());
+        DBAdapter dbAdapter = new DBAdapter(context);
         String llaveDosificacion = dbAdapter.getLlaveDosificacion(dataModel.getTlxAre());
         String generateControlCode = controlCode.generate(dataModel.getTlxNroAut(),
                 dataModel.getTlxFacNro(),
@@ -1357,7 +1412,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
     }
 
     public enum estados_lectura {
-        Pendiente, Leido, Postergado
+        Pendiente, Leido, Postergado, PostergadoTmp
     }
 
     public enum estados_cliente {
@@ -1371,7 +1426,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         return "" + value;
     }
 
-    private int correccionPotencia(String demPot, int lecturaPotencia, int decimales) {
+    public static int correccionPotencia(String demPot, int lecturaPotencia, int decimales) {
         if (decimales == 0) {
             return (lecturaPotencia);
         }

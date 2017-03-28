@@ -135,6 +135,7 @@ public class DataModel {
     private int TlxDecPot;
     private String TlxDemPot;
     private String TlxRecordatorio;
+    private double TlxImpEnergia;
 
     public enum Columns {
         id,
@@ -255,6 +256,7 @@ public class DataModel {
         TlxConsFacturado,
         TlxDebAuto,
         TlxRecordatorio,
+        TlxImpEnergia,
         estado_lectura,
         enviado
     }
@@ -408,6 +410,7 @@ public class DataModel {
         dataModel.setTlxFechaAlto(cursor.getString(Columns.TlxFechaAlto.ordinal()));
         dataModel.setTlxFechaMedio(cursor.getString(Columns.TlxFechaMedio.ordinal()));
         dataModel.setTlxFechaBajo(cursor.getString(Columns.TlxFechaBajo.ordinal()));
+        dataModel.setTlxImpEnergia(cursor.getDouble(Columns.TlxImpEnergia.ordinal()));
         return dataModel;
     }
 
@@ -498,6 +501,14 @@ public class DataModel {
 
     public int getTlxEstCli() {
         return TlxEstCli;
+    }
+
+    public double getTlxImpEnergia() {
+        return TlxImpEnergia;
+    }
+
+    public void setTlxImpEnergia(double tlxImpEnergia) {
+        TlxImpEnergia = tlxImpEnergia;
     }
 
     public void setTlxEstCli(int tlxEstCli) {
