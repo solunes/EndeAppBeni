@@ -13,6 +13,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -269,7 +270,7 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
             Log.e(TAG, "Connected");
             checkStatus(1);
         } catch (ConnectionException e) {
-            Log.e(TAG, "Comm Error! Disconnecting", e);
+            Log.d(TAG, "Comm Error! Disconnecting", e);
             sleeper(500);
             checkStatus(0);
             disconnect();
@@ -345,10 +346,10 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
                     sleeper(500);
                 }
             } catch (ConnectionException e) {
-                Log.e(TAG, e.getMessage(), e);
+                Log.d(TAG, e.getMessage(), e);
                 checkStatus(0);
             } catch (UnsupportedEncodingException e) {
-                Log.e(TAG, "sendLabelToPrint: ", e);
+                Log.d(TAG, "sendLabelToPrint: ", e);
             }
         } else {
             checkStatus(0);
@@ -369,6 +370,7 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
         getMenuInflater().inflate(R.menu.menu_search, menu);
         searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) searchItem.getActionView();
+        searchView.setInputType(InputType.TYPE_CLASS_NUMBER);
         searchView.setOnQueryTextListener(this);
         searchView.setIconifiedByDefault(false);
         searchView.setSubmitButtonEnabled(false);

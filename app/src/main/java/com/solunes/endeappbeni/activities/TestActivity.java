@@ -201,7 +201,7 @@ public class TestActivity extends AppCompatActivity {
                 obs);
         if (isCalculo) {
             Log.e(TAG, "confirmarLectura: calculo exitoso: " + dataModel.getId());
-            DataFragment.saveDataModel(getApplicationContext(), dataModel, obs);
+            DataFragment.saveDataModel(getApplicationContext(), dataModel);
         } else {
             Log.e(TAG, "confirmarLectura: error en: " + dataModel.getId());
         }

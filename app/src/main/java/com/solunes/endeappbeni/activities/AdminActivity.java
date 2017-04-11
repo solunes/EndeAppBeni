@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -15,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DebugUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,6 +27,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.solunes.endeappbeni.BuildConfig;
 import com.solunes.endeappbeni.R;
 import com.solunes.endeappbeni.dataset.DBAdapter;
 import com.solunes.endeappbeni.dataset.DBHelper;
@@ -178,6 +181,9 @@ public class AdminActivity extends AppCompatActivity {
                 startActivity(new Intent(AdminActivity.this, TestActivity.class).putExtra("user_id", id_user));
             }
         });
+        if (BuildConfig.DEBUG){
+            test.setVisibility(View.VISIBLE);
+        }
 
         // se muestra el nombre de la impresora
         printName = (TextView) findViewById(R.id.label_print_name);
@@ -278,10 +284,10 @@ public class AdminActivity extends AppCompatActivity {
             values.put(Obs.Columns.id.name(), object.getInt(Obs.Columns.id.name()));
             values.put(Obs.Columns.ObsDes.name(), object.getString(Obs.Columns.ObsDes.name()).trim());
             values.put(Obs.Columns.ObsTip.name(), object.getInt(Obs.Columns.ObsTip.name()));
-            values.put(Obs.Columns.ObsAut.name(), object.getInt(Obs.Columns.ObsAut.name()));
             values.put(Obs.Columns.ObsInd.name(), object.getInt(Obs.Columns.ObsInd.name()));
             values.put(Obs.Columns.ObsLec.name(), object.getInt(Obs.Columns.ObsLec.name()));
             values.put(Obs.Columns.ObsFac.name(), object.getInt(Obs.Columns.ObsFac.name()));
+            values.put(Obs.Columns.ObsCond.name(), object.getInt(Obs.Columns.ObsCond.name()));
             // guardar values
             dbAdapter.saveObject(DBHelper.OBS_TABLE, values);
         }

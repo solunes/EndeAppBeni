@@ -105,7 +105,7 @@ public class AvisoCobro {
                 "T TF01.CPF 0 575 205 N° Medidor:\r\n" +
                 "RIGHT 100\r\n" +
                 "T TF01.CPF 0 130 205 " + dataModel.getTlxCliNit() + "\r\n" +
-                "T HF03.CPF 0 405 200 " + dataModel.getTlxCli() + "\r\n" +
+                "T HF03.CPF 0 405 200 " + dataModel.getTlxCli() +"-"+ dataModel.getTlxDav()+ "\r\n" +
                 "T TF01.CPF 0 720 205 " + dataModel.getTlxNroMed() + "\r\n" +
 
 

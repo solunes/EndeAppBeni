@@ -9,19 +9,19 @@ public class Obs {
     private int id;
     private String obsDes;
     private int obsTip;
-    private int obsAut;
     private int obsInd;
     private int obsLec;
     private int obsFac;
+    private int obsCond;
 
     public enum Columns {
         id,
         ObsDes,
         ObsTip,
-        ObsAut,
         ObsInd,
         ObsLec,
-        ObsFac
+        ObsFac,
+        ObsCond
     }
 
     public static Obs fromCursor(Cursor cursor) {
@@ -29,19 +29,19 @@ public class Obs {
         obs.setId(cursor.getInt(Columns.id.ordinal()));
         obs.setObsDes(cursor.getString(Columns.ObsDes.ordinal()));
         obs.setObsTip(cursor.getInt(Columns.ObsTip.ordinal()));
-        obs.setObsAut(cursor.getInt(Columns.ObsAut.ordinal()));
         obs.setObsInd(cursor.getInt(Columns.ObsInd.ordinal()));
         obs.setObsLec(cursor.getInt(Columns.ObsLec.ordinal()));
         obs.setObsFac(cursor.getInt(Columns.ObsFac.ordinal()));
+        obs.setObsCond(cursor.getInt(Columns.ObsCond.ordinal()));
         return obs;
     }
 
-    public int getObsAut() {
-        return obsAut;
+    public int getObsCond() {
+        return obsCond;
     }
 
-    public void setObsAut(int obsAut) {
-        this.obsAut = obsAut;
+    public void setObsCond(int obsCond) {
+        this.obsCond = obsCond;
     }
 
     public int getObsInd() {
