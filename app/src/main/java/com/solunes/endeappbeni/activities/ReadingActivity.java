@@ -120,7 +120,8 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
             View inflate = LayoutInflater.from(this).inflate(R.layout.custom_tab, null);
             TextView tabText = (TextView) inflate.findViewById(R.id.textview_custom_tab);
             tabText.setText(i + 1 + "");
-            if (datas.get(i).getEstadoLectura() != DataFragment.estados_lectura.Pendiente.ordinal()) {
+            if (datas.get(i).getEstadoLectura() != DataFragment.estados_lectura.Pendiente.ordinal()
+                    && datas.get(i).getEstadoLectura() != DataFragment.estados_lectura.PostergadoTmp.ordinal()) {
                 tabText.setTextColor(getResources().getColor(android.R.color.white));
             }
             tabAt.setCustomView(inflate);
@@ -172,11 +173,10 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
         DBAdapter dbAdapter = new DBAdapter(this);
         DataModel dataLastSaved = dbAdapter.getLastSaved();
         DataModel dataCurrent = dbAdapter.getData(idData);
+        dbAdapter.orderPendents(dataCurrent.getTlxOrdTpl());
         if (dataLastSaved == null) {
-            dbAdapter.orderPendents(0, dataCurrent.getTlxOrdTpl());
-            dataCurrent.setTlxOrdTpl(1);
+            dataCurrent.setTlxOrdTpl(0);
         } else {
-            dbAdapter.orderPendents(dataLastSaved.getTlxOrdTpl(), dataCurrent.getTlxOrdTpl());
             dataCurrent.setTlxOrdTpl(dataLastSaved.getTlxOrdTpl() + 1);
         }
         ContentValues values = new ContentValues();
@@ -188,7 +188,7 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
     @Override
     public void onNextPage() {
         int currentItem = viewPager.getCurrentItem();
-        if (currentItem < adapter.getCount()){
+        if (currentItem < adapter.getCount()) {
             viewPager.setCurrentItem(currentItem + 1);
         }
     }

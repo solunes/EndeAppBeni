@@ -19,15 +19,15 @@ public class PrintGenerator {
     /**
      * Este metodo es el encargado de crear el string para la impresion.
      *
-     * @param dataModel           objeto tipo DataModel con todos los datos para la impresion
-     * @param printTitles         un array con titulos de campos personalizados
-     * @param printValues         un array con valores de los campos personalizados
-     * @param historico           objeto Historico para esta impresion
-     * @param garantiaString      deposito de garantia, si no hay es null
-     * @param cardep              cargo por deposito
-     * @param aseoTitle           titulo de la tarifa de aseo
-     * @param tapTitle            titulo de la tarifa de alumbrado publico
-     * @param leyenda             un string array de la leyenda
+     * @param dataModel      objeto tipo DataModel con todos los datos para la impresion
+     * @param printTitles    un array con titulos de campos personalizados
+     * @param printValues    un array con valores de los campos personalizados
+     * @param historico      objeto Historico para esta impresion
+     * @param garantiaString deposito de garantia, si no hay es null
+     * @param cardep         cargo por deposito
+     * @param aseoTitle      titulo de la tarifa de aseo
+     * @param tapTitle       titulo de la tarifa de alumbrado publico
+     * @param leyenda        un string array de la leyenda
      * @return devuelve un string generado listo para mandarlo a la impresora
      */
     public static String creator(DataModel dataModel,
@@ -39,6 +39,7 @@ public class PrintGenerator {
                                  String aseoTitle,
                                  String tapTitle,
                                  String nit,
+                                 String fechaLimiteEmision,
                                  String[] leyenda) {
         String deudasEnergia = "";
 
@@ -61,9 +62,9 @@ public class PrintGenerator {
         String qrData = nit +
                 "|" + dataModel.getTlxFacNro() +
                 "|" + dataModel.getTlxNroAut() +
-                "|" + dataModel.getTlxFecEmi() +
-                "|" + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) +
-                "|" + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) +
+                "|" + formatedDateQR(dataModel.getTlxFecEmi()) +
+                "|" + StringUtils.roundTwoDigits(dataModel.getTlxImpMes()) +
+                "|" + StringUtils.roundTwoDigits(dataModel.getTlxImpSum()) +
                 "|" + dataModel.getTlxCodCon() +
                 "|" + dataModel.getTlxCliNit() +
                 "|" + StringUtils.roundTwoDigits(tasas) +
@@ -170,7 +171,7 @@ public class PrintGenerator {
                 "T CONSO1.CPF 0 40 1130 FECHA LÍMITE DE EMISIÓN: \r\n" +
 
                 "T CONSO2.CPF 0 270 1100 " + dataModel.getTlxCodCon() + "\r\n" +
-                "T CONSO2.CPF 0 270 1130 " + dataModel.getTlxFecLim() + "\r\n" +
+                "T CONSO2.CPF 0 270 1130 " + fechaLimiteEmision + "\r\n" +
 
                 "CENTER\r\n" +
                 "T CONSO4.CPF 0 0 1230 " + leyenda[0] + "\n\r\n" +
@@ -221,18 +222,13 @@ public class PrintGenerator {
      * @param dateLec fecha actual
      * @return retorna la camtidad de dias entre 27 a 33 dias, si esta fuera de ese intervalo retorna '--'
      */
-    public static String calcDays(String dateAnt, String dateLec) {
+    public static int calcDays(String dateAnt, String dateLec) {
         Calendar calendarAnt = Calendar.getInstance();
         calendarAnt.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateAnt));
         Calendar calendarLec = Calendar.getInstance();
         calendarLec.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateLec));
 
-        int days = calendarAnt.getActualMaximum(Calendar.DAY_OF_MONTH) - calendarAnt.get(Calendar.DAY_OF_MONTH) + calendarLec.get(Calendar.DAY_OF_MONTH);
-        if (27 <= days && days <= 33) {
-            return String.valueOf(days);
-        } else {
-            return "--";
-        }
+        return calendarAnt.getActualMaximum(Calendar.DAY_OF_MONTH) - calendarAnt.get(Calendar.DAY_OF_MONTH) + calendarLec.get(Calendar.DAY_OF_MONTH);
     }
 
     /**
@@ -436,6 +432,13 @@ public class PrintGenerator {
                     "RIGHT 782\r\n" +
                     "T CONSO2.CPF 0 720 " + offsetX + " " + dataModel.getTlxKwhAdi() + " kWh\r\n";
         }
+
+        offsetX += 20;
+        res += "LEFT\r\n" +
+                "T CONSO2.CPF 0 45 " + offsetX + " Total energía a facturar\r\n" +
+                "RIGHT 782\r\n" +
+                "T CONSO2.CPF 0 720 " + offsetX + " " + dataModel.getTlxConsFacturado() + " kWh\r\n";
+
         if (dataModel.getTlxTipDem() == 2) {
             offsetX += 20;
             res += "LEFT\r\n" +
@@ -464,5 +467,19 @@ public class PrintGenerator {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         return calendar.get(Calendar.DAY_OF_MONTH) + " de " + mesString(calendar.get(Calendar.MONTH) + 1) + " de " + calendar.get(Calendar.YEAR);
+    }
+
+    /**
+     * Este metodo le da un formato especifico para la factura. Por ejemplo: 21-04-16
+     *
+     * @param fecha la fecha a ser procesada
+     * @return retorna la fecha en el formato dd-MM-yy
+     */
+    private static String formatedDateQR(String fecha) {
+        String[] split = fecha.split("-");
+        String year = split[0];
+        String month = split[1];
+        String day = split[2];
+        return day + "/" + month + "/" + year;
     }
 }
