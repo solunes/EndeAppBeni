@@ -544,19 +544,16 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             }
         }
 
-        // Verificar y obtener la lectura inicial cuando sea requerida
-        if (tipoLectura != 3 && tipoLectura != 9 && input.isEmpty()) {
-            Snackbar.make(view, "Ingresar un indice", Snackbar.LENGTH_SHORT).show();
+        boolean isAlert = false;
+        String message = "Se ha detectado:";
+
+        // obtener lectura de energia y verificar digitos
+        nuevaLectura = Integer.parseInt(input);
+        if (nuevaLectura > dataModel.getTlxTope()) {
+            Snackbar.make(view, "La lectura no puede tener mas de " + dataModel.getTlxNroDig() + " digitos", Snackbar.LENGTH_SHORT).show();
             return;
-        } else {
-            // obtener lectura de energia y verificar digitos
-            nuevaLectura = Integer.parseInt(input);
-            if (nuevaLectura > dataModel.getTlxTope()) {
-                Snackbar.make(view, "La lectura no puede tener mas de " + dataModel.getTlxNroDig() + " digitos", Snackbar.LENGTH_SHORT).show();
-                return;
-            }
-            nuevaLectura = correccionDeDigitos(nuevaLectura, dataModel.getTlxDecEne());
         }
+        nuevaLectura = correccionDeDigitos(nuevaLectura, dataModel.getTlxDecEne());
 
         // condicionante de observacion 1
         if (obs.getObsCond() == 1) {
@@ -580,10 +577,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
         // correction de obs ind
-        if (obs.getObsInd() == 1) {
-            nuevaLectura = dataModel.getTlxUltInd();
-        } else if (obs.getObsInd() == 2) {
-            nuevaLectura = 0;
+        if (tipoLectura != 0) {
+            if (obs.getObsInd() == 1) {
+                nuevaLectura = dataModel.getTlxUltInd();
+            } else if (obs.getObsInd() == 2) {
+                nuevaLectura = 0;
+            }
         }
 
         // Calcular la lectura en Kwh segun el tipo de lectura
@@ -591,7 +590,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             lecturaKwh = dataModel.getTlxConPro();
         } else {
             if (nuevaLectura < dataModel.getTlxUltInd()) {
-                if ((dataModel.getTlxUltInd() - nuevaLectura) <= 10) {
+                if (Math.abs(dataModel.getTlxUltInd() - nuevaLectura) <= 10) {
                     nuevaLectura = dataModel.getTlxUltInd();
                     indiceIgualado = true;
                 } else {
@@ -610,7 +609,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         int conPro = dataModel.getTlxConPro();
         autoObs = new ArrayList<>();
         // Alertas de consumo bajo, consumo elevado y giro de medidor
-        boolean isAlert = false;
         boolean isPostergado = false;
         if (tipoLectura == 5) {
             isPostergado = true;
@@ -618,7 +616,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.Theme_Dialog);
         builder.setTitle("Alerta!");
         if (dataModel.getTlxCliNew() == 0) {
-            String message = "Se ha detectado:";
             if (lecturaKwh > (conPro + conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_elevado.name()) / 100))) {
                 message += "\n- Consumo elevado";
                 isAlert = true;
@@ -643,8 +640,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 isAlert = true;
                 autoObs.add(50);
             }
-            message += "\n\n¿Es correcto el índice " + nuevaLectura + "?";
-            builder.setMessage(message);
             builder.setNegativeButton("Cancelar", null);
         }
 
@@ -659,6 +654,15 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         if (isPostergado) {
             isAlert = false;
         }
+
+        // Verificar y obtener la lectura inicial cuando sea requerida
+        if (obs.getObsInd() == 0 && input.equals("0")) {
+            isAlert = true;
+            message += "\nEl índice introducido será 0";
+        }
+
+        message += "\n\n¿Es correcto el índice " + input + "?";
+        builder.setMessage(message);
 
         final int finalLecturaKwh = lecturaKwh;
         final int finalNuevaLectura = nuevaLectura;
