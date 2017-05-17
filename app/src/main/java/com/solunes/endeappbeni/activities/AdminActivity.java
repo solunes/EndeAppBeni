@@ -5,18 +5,14 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Debug;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.DebugUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -54,7 +50,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Map;
 
 /**
  * Esta activity controla el login del usuario
@@ -335,6 +330,7 @@ public class AdminActivity extends AppCompatActivity {
             ContentValues values = new ContentValues();
             values.put(PrintObs.Columns.id.name(), object.getInt(PrintObs.Columns.id.name()));
             values.put(PrintObs.Columns.ObiDes.name(), object.getString(PrintObs.Columns.ObiDes.name()).trim());
+            values.put(PrintObs.Columns.ObiAut.name(), object.getInt(PrintObs.Columns.ObiAut.name()));
             // guardar values
             dbAdapter.saveObject(DBHelper.PRINT_OBS_TABLE, values);
         }
