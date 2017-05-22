@@ -75,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView statePrinted;
     private TextView statePostponed;
 
+    private EditText nroMed;
+    private EditText lecMed;
+    private EditText potMed;
+
     private CardView cardRate;
 
     private int nroRemesa;
@@ -516,7 +520,11 @@ public class MainActivity extends AppCompatActivity {
                 valuesRes.put(Resultados.Columns.general_id.name(), resultado.getInt(Resultados.Columns.general_id.name()));
                 valuesRes.put(Resultados.Columns.lectura.name(), resultado.getInt(Resultados.Columns.lectura.name()));
                 valuesRes.put(Resultados.Columns.lectura_potencia.name(), resultado.getDouble(Resultados.Columns.lectura_potencia.name()));
-                valuesRes.put(Resultados.Columns.observacion.name(), resultado.getDouble(Resultados.Columns.observacion.name()));
+                try {
+                    valuesRes.put(Resultados.Columns.observacion.name(), resultado.getDouble(Resultados.Columns.observacion.name()));
+                } catch (JSONException jex) {
+                    valuesRes.put(Resultados.Columns.observacion.name(), 104);
+                }
                 dbAdapter.saveObject(DBHelper.RESULTADOS_TABLE, valuesRes);
             } catch (Exception e) {
                 Log.e(TAG, "processResponse: no hay resultados");
@@ -683,9 +691,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(MainActivity.this, AnalyticsActivity.class));
     }
 
-    private EditText nroMed;
-    private EditText lecMed;
-
     /**
      * Este metodo muestra un cuadro de dialogo donde se agrega un nuevo medidor entre lineas.
      * Tambien verifica que el nuevo medidor no se haya guardado antes, y no estea en las lecturas
@@ -702,6 +707,7 @@ public class MainActivity extends AppCompatActivity {
         View viewInside = LayoutInflater.from(this).inflate(R.layout.layout_new_medidor, null);
         nroMed = (EditText) viewInside.findViewById(R.id.new_med_number);
         lecMed = (EditText) viewInside.findViewById(R.id.new_med_lectura);
+        potMed = (EditText) viewInside.findViewById(R.id.new_med_pot);
         newMedidor.setView(viewInside);
         newMedidor.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
             @Override
@@ -716,10 +722,9 @@ public class MainActivity extends AppCompatActivity {
                         cv.put(MedEntreLineas.Columns.MelRem.name(), nroRemesa);
                         cv.put(MedEntreLineas.Columns.MelMed.name(), Integer.parseInt(nroMed.getText().toString()));
                         cv.put(MedEntreLineas.Columns.MelLec.name(), Integer.parseInt(lecMed.getText().toString()));
+                        cv.put(MedEntreLineas.Columns.MelPot.name(), Integer.parseInt(potMed.getText().toString()));
                         dbAdapter.saveObject(DBHelper.MED_ENTRE_LINEAS_TABLE, cv);
                         dbAdapter.close();
-                        Log.e(TAG, "onClick: " + nroMed.getText().toString());
-                        Log.e(TAG, "onClick: " + lecMed.getText().toString());
                         Snackbar.make(view, "Nuevo medidor para la ruta", Snackbar.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(MainActivity.this, "El número de medidor ya existe", Toast.LENGTH_SHORT).show();

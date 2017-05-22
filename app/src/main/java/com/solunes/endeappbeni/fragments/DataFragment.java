@@ -230,7 +230,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         });
 
         inputPotenciaReading = (EditText) view.findViewById(R.id.input_potencia_reading);
-        if (dataModel.getTlxTipDem() == 2) {
+        if (dataModel.getTlxLeePot() == 1) {
             inputPotenciaReading.setVisibility(View.VISIBLE);
             if (dataModel.getTlxPotLei() > 0) {
                 inputPotenciaReading.setText(String.valueOf(dataModel.getTlxPotLei()));
@@ -559,7 +559,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         DBAdapter dbAdapter = new DBAdapter(getContext());
 
         // si es mediana demanda se verifica que tiene potencia
-        if (dataModel.getTlxTipDem() == 2 && tipoLectura != 3 && tipoLectura != 9) {
+        if (dataModel.getTlxLeePot() == 1 && tipoLectura != 3 && tipoLectura != 9) {
             if (inputPotenciaReading.getText().toString().isEmpty()) {
                 Snackbar.make(view, "Ingresar indice de potencia", Snackbar.LENGTH_SHORT).show();
                 return;
@@ -813,7 +813,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         if (tipoLectura == 5) {
             dataModel.setTlxNvaLec(nuevaLectura);
-            if (dataModel.getTlxTipDem() == 2) {
+            if (dataModel.getTlxLeePot() == 1) {
                 potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
                 dataModel.setTlxPotLei(potenciaLeida);
             }
@@ -864,7 +864,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         // calculo de potencia para mediana demanda
         double importePotencia = 0;
-        if (dataModel.getTlxTipDem() == 2) {
+        if (dataModel.getTlxLeePot() == 1) {
             // correccion de digitos para la potencia leida
             potenciaLeida = correccionPotencia(dataModel.getTlxDemPot(), potenciaLeida, dataModel.getTlxDecPot());
             dataModel.setTlxPotLei(potenciaLeida);
@@ -960,7 +960,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         printValues.add(GenLecturas.round(dataModel.getTlxImpEnergia() + dataModel.getTlxCarFij()));
 
         // calculo de potencia para mediana demanda
-        if (dataModel.getTlxTipDem() == 2) {
+        if (dataModel.getTlxLeePot() == 1) {
             // agregar el importe por potencia al array de impresion
             printTitles.add(dbAdapter.getItemDescription(41));
             printValues.add(GenLecturas.round(dataModel.getTlxImpPot()));
@@ -1345,7 +1345,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             estadoMedidor.setText(estados_lectura.Pendiente.name());
             estadoMedidor.setTextColor(getResources().getColor(R.color.colorPendiente));
         }
-        if (dataModel.getTlxTipDem() == 2 && dataModel.getTlxPotLei() > 0) {
+        if (dataModel.getTlxLeePot() == 1 && dataModel.getTlxPotLei() > 0) {
             inputPotenciaReading.setText(String.valueOf(dataModel.getTlxPotLei()));
         }
         if (dataModel.getEstadoLectura() != 0 && dataModel.getEstadoLectura() != 3) {

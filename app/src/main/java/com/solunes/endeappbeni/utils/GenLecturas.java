@@ -249,7 +249,7 @@ public class GenLecturas {
         }
         long factor = (long) Math.pow(10, decimal);
         value = value * factor;
-        long tmp = Math.round(value);
+        long tmp = Math.round(value + 0.000000001);
         double res = (double) tmp / factor;
         if (isNegative) {
             res = -res;

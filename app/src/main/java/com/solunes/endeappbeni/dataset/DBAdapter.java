@@ -215,12 +215,14 @@ public class DBAdapter {
      * @param state Es el tipo de lectura que va venir como parametro para la consulta
      * @return retorna una lista de DataModel
      */
-    public ArrayList<DataModel> getState(int state) {
+    public ArrayList<DataModel> getState(String... state) {
         open();
         ArrayList<DataModel> dataModels = new ArrayList<>();
-        Cursor query = db.query(DBHelper.DATA_TABLE, null,
-                DataModel.Columns.estado_lectura.name() + " = " + state,
-                null, null, null, DataModel.Columns.TlxImpAvi.name() + " ASC");
+
+        String rawQuery = "SELECT * FROM " + DBHelper.DATA_TABLE +
+                " WHERE " + DataModel.Columns.estado_lectura.name() + makeInQueryString(state.length, state) + " ORDER BY " + DataModel.Columns.TlxImpAvi.name() + " ASC";
+        Cursor query = db.rawQuery(rawQuery, null);
+
         while (query.moveToNext()) {
             dataModels.add(DataModel.fromCursor(query));
         }
@@ -554,6 +556,14 @@ public class DBAdapter {
             cursor.close();
             cursor = db.query(DBHelper.MED_ENTRE_LINEAS_TABLE, null, null, null, null, null, null);
             items.add(new StatisticsItem("Nuevos medidores", cursor.getCount()));
+            cursor.close();
+            cursor = db.query(DBHelper.PRINT_OBS_DATA_TABLE, null,
+                    PrintObsData.Columns.observacion_imp_id.name() + " = 6", null, null, null, null);
+            items.add(new StatisticsItem("Facturas no entregadas", cursor.getCount()));
+            cursor.close();
+            cursor = db.query(DBHelper.PRINT_OBS_DATA_TABLE, null,
+                    "not " + PrintObsData.Columns.observacion_imp_id.name() + " = 6", null, null, null, null);
+            items.add(new StatisticsItem("Facturas reimpresas", cursor.getCount()));
             cursor.close();
         }
         if (param == 2) {
@@ -898,5 +908,22 @@ public class DBAdapter {
         }
         cursor.close();
         return -1;
+    }
+
+    public static String makeInQueryString(int size, String... ids) {
+        StringBuilder sb = new StringBuilder();
+        if (size > 0) {
+            sb.append(" IN ( ");
+            String placeHolder = "";
+            for (int i = 0; i < size; i++) {
+                sb.append(placeHolder);
+                sb.append("'");
+                sb.append(ids[i]);
+                sb.append("'");
+                placeHolder = ",";
+            }
+            sb.append(" )");
+        }
+        return sb.toString();
     }
 }

@@ -14,12 +14,14 @@ public class MedEntreLineas {
     private int melRem;
     private int melMed;
     private int melLec;
+    private int melPot;
 
     public static MedEntreLineas fromCursor(Cursor cursor) {
         MedEntreLineas entreLineas = new MedEntreLineas();
         entreLineas.setMelRem(cursor.getInt(Columns.MelRem.ordinal()));
         entreLineas.setMelMed(cursor.getInt(Columns.MelMed.ordinal()));
         entreLineas.setMelLec(cursor.getInt(Columns.MelLec.ordinal()));
+        entreLineas.setMelPot(cursor.getInt(Columns.MelPot.ordinal()));
         return entreLineas;
     }
 
@@ -29,6 +31,7 @@ public class MedEntreLineas {
             jsonObject.put(Columns.MelRem.name(), getMelRem());
             jsonObject.put(Columns.MelMed.name(), getMelMed());
             jsonObject.put(Columns.MelLec.name(), getMelLec());
+            jsonObject.put(Columns.MelPot.name(), getMelPot());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -38,7 +41,8 @@ public class MedEntreLineas {
     public enum Columns {
         MelRem,
         MelMed,
-        MelLec
+        MelLec,
+        MelPot
     }
 
     public int getId() {
@@ -67,6 +71,14 @@ public class MedEntreLineas {
 
     public int getMelLec() {
         return melLec;
+    }
+
+    public int getMelPot() {
+        return melPot;
+    }
+
+    public void setMelPot(int melPot) {
+        this.melPot = melPot;
     }
 
     public void setMelLec(int melLec) {

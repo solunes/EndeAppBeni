@@ -66,6 +66,7 @@ public class DetalleFactura {
      * @return importe redondeado
      */
     public static double crearDetalle(Context context, int idData, int idItem, double importe) {
+        importe = GenLecturas.roundDecimal(importe, 5);
         double importeRedondeado = GenLecturas.roundDecimal(importe, 1);
         double diferencia = importe - importeRedondeado;
 
