@@ -60,6 +60,7 @@ public class GenLecturas {
         if (kWhConsumo <= descuento) {
             return 0;
         }
+        int hasta = descuento;
         kWhConsumo = kWhConsumo - descuento;
         double res = 0;
         double resTotal = 0;
@@ -88,6 +89,7 @@ public class GenLecturas {
             if (finish) {
                 return round(resTotal);
             }
+            hasta = tarifa.getKwh_hasta();
         }
         return 0;
     }

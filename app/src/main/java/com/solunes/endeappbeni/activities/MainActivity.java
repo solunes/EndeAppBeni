@@ -35,6 +35,7 @@ import com.solunes.endeappbeni.networking.CallbackAPI;
 import com.solunes.endeappbeni.networking.GetRequest;
 import com.solunes.endeappbeni.networking.PostRequest;
 import com.solunes.endeappbeni.networking.Token;
+import com.solunes.endeappbeni.utils.AvisoCobro;
 import com.solunes.endeappbeni.utils.NumberToLetterConverter;
 import com.solunes.endeappbeni.utils.StringUtils;
 import com.solunes.endeappbeni.utils.Urls;

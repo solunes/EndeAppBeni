@@ -7,6 +7,7 @@ import com.solunes.endeappbeni.models.DataModel;
 import com.solunes.endeappbeni.models.Historico;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import static com.solunes.endeappbeni.utils.PrintGenerator.calcDays;
 import static com.solunes.endeappbeni.utils.PrintGenerator.formatedDate;
@@ -33,24 +34,28 @@ public class AvisoCobro {
 
         if (dataModel.getTlxDeuEneC() > 0) {
             deudasEnergia = "LEFT\r\n" +
-                    "T TF01.CPF 0 40 1120 Señor cliente usted es pasible de corte\r\n" +
-                    "T TF01.CPF 0 40 1060 Más deuda(s) pendiente(s) de energía   (" + dataModel.getTlxDeuEneC() + ")  Bs\r\n";
+                    "T TF01.CPF 0 40 1170 Más deuda(s) pendiente(s) de energía   (" + dataModel.getTlxDeuEneC() + ")  Bs\r\n";
             deudasEnergia += "RIGHT 782\r\n" +
-                    "T TF01.CPF 0 720 1060 " + StringUtils.roundTwoDigits(dataModel.getTlxDeuEneI()) + "\r\n";
+                    "T TF01.CPF 0 720 1170 " + StringUtils.roundTwoDigits(dataModel.getTlxDeuEneI()) + "\r\n";
+        }
+
+        if (dataModel.getTlxDeuEneC() > 2) {
+            deudasEnergia += "T TF01.CPF 0 40 1200 Señor cliente usted es pasible de corte\r\n";
+
         }
 
         String garantiaText = "";
         if (garantia > 0) {
             garantiaText = "LEFT\r\n" +
-                    "T HF04.CPF 0 65 870 " + garantiaString + "\r\n" +
-                    "T HF04.CPF 0 575 870 Bs\r\n" +
+                    "T HF04.CPF 0 65 930 " + garantiaString + "\r\n" +
+                    "T HF04.CPF 0 575 930 Bs\r\n" +
                     "RIGHT 782\r\n" +
-                    "T HF04.CPF 0 720 870 " + garantia + "\r\n";
+                    "T HF04.CPF 0 720 930 " + garantia + "\r\n";
         }
 
         String detalleFacturacion = "";
 //        String[] strings = (String[]) list.keySet().toArray();
-        int yValue = 575;
+        int yValue = 605;
 //        String[] values = new String[]{"123.2", "123.4", "123.1", "123.3", "123.5"};
         for (int i = 0; i < titles.size(); i++) {
             if (i == (titles.size() - 1)) {
@@ -82,9 +87,9 @@ public class AvisoCobro {
 
         String cpclConfigLabel = "! 0 200 200 1625 1\r\n" +
                 "LEFT\r\n" +
-                "T HF02.CPF 0 590 0 AVISO DE\r\n" +
-                "T HF02.CPF 0 570 25 COBRANZA\r\n" +
-                "T HF01_4.CPF 0 70 10 ENDE - DELBENI\r\n" +
+                "T HF02.CPF 0 590 0 PRE AVISO\r\n" +
+                "T HF02.CPF 0 570 25 DE COBRANZA\r\n" +
+                "PCX 70 5 !<logo1.PCX\r\n" +
 
                 "CENTER\r\n" +
                 "T HF02.CPF 0 40 80 DATOS DEL CONSUMIDOR\r\n" +
@@ -94,23 +99,24 @@ public class AvisoCobro {
                 "T TF01.CPF 0 40 100 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "T TF01.CPF 0 40 120 Fecha Emisión: \r\n" +
                 "CENTER\r\n" +
-                "T TF01.CPF 0 50 120 " + dataModel.getTlxCiudad() + " " + getFechaEmi(dataModel.getTlxFecEmi()) + " \r\n" +
+                "T TF01.CPF 0 50 120 " + dataModel.getTlxCiudad() + ", " + getFechaEmi(dataModel.getTlxFecEmi()) + " \r\n" +
 
                 "LEFT\r\n" +
                 "T TF01.CPF 0 40 150 Señor (a):  " + dataModel.getTlxNom() + "\r\n" +
-
-                "LEFT\r\n" +
-                "T TF01.CPF 0 40 205 NIT/CI:\r\n" +
-                "T TF01.CPF 0 280 205 N° Cuenta:\r\n" +
-                "T TF01.CPF 0 575 205 N° Medidor:\r\n" +
+                "T TF01.CPF 0 575 150 NIT/CI:\r\n" +
                 "RIGHT 100\r\n" +
-                "T TF01.CPF 0 130 205 " + dataModel.getTlxCliNit() + "\r\n" +
-                "T HF03.CPF 0 405 200 " + dataModel.getTlxCli() +"-"+ dataModel.getTlxDav()+ "\r\n" +
-                "T TF01.CPF 0 720 205 " + dataModel.getTlxNroMed() + "\r\n" +
+                "T TF01.CPF 0 720 150 " + dataModel.getTlxCliNit() + "\r\n" +
+
+                "LEFT\r\n" +
+                "T TF01.CPF 0 40 195 N° Cliente:\r\n" +
+                "T TF01.CPF 0 575 195 N° Medidor:\r\n" +
+                "RIGHT 100\r\n" +
+                "T HF03.CPF 0 165 190 " + dataModel.getTlxCli() + "\r\n" +
+                "T TF01.CPF 0 720 195 " + dataModel.getTlxNroMed() + "\r\n" +
 
 
                 "LEFT\r\n" +
-                "T TF01.CPF 0 40 240 Dirección:  " + dataModel.getTlxDir() + "\r\n" +
+                "T TF01.CPF 0 40 230 Dirección:  " + dataModel.getTlxDir() + "\r\n" +
 
                 "T TF01.CPF 0 30 270 -------------------------------------------------------------------------------------------------------------\r\n" +
 
@@ -123,7 +129,7 @@ public class AvisoCobro {
                 "T TF01.CPF 0 590 315 " + dataModel.getTlxCtaAnt() + "\r\n" +
 
                 "T TF01.CPF 0 40 340 Categoría Tarifaria:\r\n" +
-                "T TF01.CPF 0 300 340 " + dataModel.getTlxActivi() + "\r\n" +
+                "T TF01.CPF 0 300 340 " + dataModel.getTlxSgl() + "\r\n" +
 
                 "T TF01.CPF 0 320 360 Anterior\r\n" +
                 "T TF01.CPF 0 500 360 Actual\r\n" +
@@ -145,64 +151,70 @@ public class AvisoCobro {
                 pairDetalleConsumo.first +
 
                 "CENTER\r\n" +
-                "T HF02.CPF 0 0 540 DETALLE AVISO DE COBRANZA\n\r\n" +
+                "T HF02.CPF 0 0 570 DETALLE PRE AVISO DE COBRANZA\n\r\n" +
 
                 "LEFT\r\n" +
-                "T TF01.CPF 0 40 530 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "T TF01.CPF 0 40 560 -------------------------------------------------------------------------------------------------------------\r\n" +
+                "T TF01.CPF 0 40 590 -------------------------------------------------------------------------------------------------------------\r\n" +
 
                 detalleFacturacion +
 
                 "LEFT\r\n" +
                 "LINE 65 760 800 760 1\r\n" +
-                "LINE 65 840 800 840 1\r\n" +
+                "LINE 65 840 800 785 1\r\n" +
                 "T TF01.CPF 0 65 765 Tasas para el Gobierno Municipal\r\n" +
                 "T TF01.CPF 0 65 790 Tasa de Alumbrado Público\r\n" +
                 "T TF01.CPF 0 65 815 Tasa de Aseo y Recojo de Basura\r\n" +
-                "T TF01.CPF 0 65 845 Importe Total Factura\r\n" +
+                "T TF01.CPF 0 65 845 Total Tasas para el Gobierno Municipal\r\n" +
+                "T TF01.CPF 0 65 880 Importe Total Factura\r\n" +
                 "T TF01.CPF 0 575 790 Bs\r\n" +
                 "T TF01.CPF 0 575 815 Bs\r\n" +
                 "T TF01.CPF 0 575 845 Bs\r\n" +
+                "T TF01.CPF 0 575 880 Bs\r\n" +
                 "RIGHT 782\r\n" +
                 "T TF01.CPF 0 720 790 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTap()) + "\r\n" +
                 "T TF01.CPF 0 720 815 " + StringUtils.roundTwoDigits(dataModel.getTlxImpAse()) + "\r\n" +
-                "T TF01.CPF 0 720 845 " + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) + "\r\n" +
+                "T TF01.CPF 0 720 845 " + StringUtils.roundTwoDigits(dataModel.getTlxImpAse() + dataModel.getTlxImpTap()) + "\r\n" +
+                "T TF01.CPF 0 720 880 " + StringUtils.roundTwoDigits(dataModel.getTlxImpFac()) + "\r\n" +
 
                 garantiaText +
 
                 "LEFT\r\n" +
-                "T TF01.CPF 0 40 940 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpFac())) + " \r\n" +
-                "T HF04.CPF 0 45 970 Importe del mes a cancelar Bs.\r\n" +
-                "T HF04.CPF 0 575 970 Bs\r\n" +
+                "T TF01.CPF 0 40 905 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpFac())) + " \r\n" +
+                "T TF01.CPF 0 40 958 -------------------------------------------------------------------------------------------------------------\r\n" +
+                "T HF03.CPF 0 45 970 Importe del mes a cancelar Bs.\r\n" +
+                "T HF04.CPF 0 45 1025 Fecha de disponibilidad en cobranza:  " + mas3dias(dataModel.getTlxFecEmi()) + "\r\n" +
+                "T HF03.CPF 0 575 970 Bs\r\n" +
 
-                "LINE 575 1000 800 1000 3\r\n" +
+                "LINE 575 1003 800 1003 3\r\n" +
 
                 "RIGHT 782\r\n" +
-                "T HF04.CPF 0 720 970 " + StringUtils.roundTwoDigits(dataModel.getTlxImpMes()) + "\r\n" +
+                "T HF03.CPF 0 720 970 " + StringUtils.roundTwoDigits(dataModel.getTlxImpMes()) + "\r\n" +
+
+                "LEFT\r\n" +
+                "T HF03.CPF 0 40 1065 Importe para crédito fiscal \r\n" +
+                "T HF03.CPF 0 575 1065 Bs\r\n" +
+                "LINE 575 1094 800 1094 3\r\n" +
+                "RIGHT 782\r\n" +
+                "T HF03.CPF 0 720 1065 " + StringUtils.roundTwoDigits(dataModel.getTlxImpSum()) + "\r\n" +
 
                 "CENTER\r\n" +
-                "T HF02.CPF 0 0 1015 DEUDA PENDIENTE DE PAGO\n\r\n" +
+                "T HF02.CPF 0 0 1115 DEUDA PENDIENTE DE PAGO\n\r\n" +
+                "LEFT\r\n" +
+                "T TF01.CPF 0 40 1105 -------------------------------------------------------------------------------------------------------------\r\n" +
+                "T TF01.CPF 0 40 1135 -------------------------------------------------------------------------------------------------------------\r\n" +
 
                 deudasEnergia +
 
-                "LEFT\r\n" +
-                "T TF01.CPF 0 40 1005 -------------------------------------------------------------------------------------------------------------\r\n" +
-                "T TF01.CPF 0 40 1035 -------------------------------------------------------------------------------------------------------------\r\n" +
-                "LINE 575 1115 800 1115 3\r\n" +
-                "T TF01.CPF 0 40 1090 Importe total a cancelar Bs.\r\n" +
-                "T TF01.CPF 0 40 1145 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpTot())) + "\r\n" +
-                "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 1090 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) + "\r\n" +
+                //"LEFT\r\n" +
+                //"LINE 575 1115 800 1110 3\r\n" +
+                //"T HF04.CPF 0 40 1085 Importe total a cancelar Bs.\r\n" +
+                //"T TF01.CPF 0 40 1145 Son: " + NumberToLetterConverter.convertNumberToLetter(StringUtils.roundTwoDigits(dataModel.getTlxImpTot())) + "\r\n" +
+                //"RIGHT 782\r\n" +
+                //"T TF01.CPF 0 720 1085 " + StringUtils.roundTwoDigits(dataModel.getTlxImpTot()) + "\r\n" +
 
                 "LEFT\r\n" +
-                "T TF01.CPF 0 40 1220 Importe para crédito fiscal Bs\r\n" +
-                "T TF01.CPF 0 40 1195 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "T TF01.CPF 0 40 1240 -------------------------------------------------------------------------------------------------------------\r\n" +
-                "LINE 575 1245 800 1245 3\r\n" +
-                "RIGHT 782\r\n" +
-                "T TF01.CPF 0 720 1220 " + StringUtils.roundTwoDigits(dataModel.getTlxImpSum()) + "\r\n" +
-
-                "LEFT\r\n" +
                 "T HF06_1.CPF 0 75 1260 HISTÓRICO\r\n" +
                 "T HF06_1.CPF 0 45 1275 Mes/Año\r\n" +
                 "T HF06_1.CPF 0 135 1275 ConsumokWh\r\n" +
@@ -256,51 +268,94 @@ public class AvisoCobro {
         cpclConfigLabel += "" +
                 "PRINT\r\n";
 
+        Log.e(TAG, "creator: " + cpclConfigLabel);
         return cpclConfigLabel;
     }
 
     private static Pair<String, Integer> detalleConsumo(DataModel dataModel) {
         String res = "";
         int offsetX = 450;
-        int total = dataModel.getTlxConsumo();
-        if (dataModel.getTlxKwhDev() > 0 && dataModel.getTlxTipLec() != 3 && dataModel.getTlxTipLec() != 6 && dataModel.getTlxTipLec() != 9) {
+        if (dataModel.getTlxKwhDev2() > 0 && dataModel.getTlxTipLec() != 3 && dataModel.getTlxTipLec() != 6 && dataModel.getTlxTipLec() != 9) {
             offsetX += 30;
             res += "LEFT\r\n" +
-                    "T CONSO2.CPF 0 40 " + offsetX + " kWh a devolver\r\n" +
+                    "T TF01.CPF 0 40 " + offsetX + " kWh a devolver\r\n" +
                     "RIGHT 782\r\n" +
-                    "T CONSO2.CPF 0 700 " + offsetX + " " + dataModel.getTlxKwhDev() + " kWh\r\n";
-            total += dataModel.getTlxKwhDev();
+                    "T TF01.CPF 0 700 " + offsetX + " " + dataModel.getTlxKwhDev2() + " kWh\r\n" +
+                    "LINE  35 " + (offsetX - 5) + "  35 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE 787 " + (offsetX - 5) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE  35 " + (offsetX + 25) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "";
         }
-        if (dataModel.getTlxKwhAdi() > 0) {
+        if (dataModel.getTlxKwhAdi2() > 0) {
             offsetX += 30;
             res += "LEFT\r\n" +
-                    "T CONSO2.CPF 0 40 " + offsetX + " kWh a adicionar\r\n" +
+                    "T TF01.CPF 0 40 " + offsetX + " kWh a adicionar\r\n" +
                     "RIGHT 782\r\n" +
-                    "T CONSO2.CPF 0 700 " + offsetX + " " + dataModel.getTlxKwhAdi() + " kWh\r\n";
-            total += dataModel.getTlxKwhAdi();
-        }
-        if (dataModel.getTlxTipDem() == 2) {
-            offsetX += 30;
-            res += "LEFT\r\n" +
-                    "T CONSO2.CPF 0 40 " + offsetX + " Potencia Leida\r\n" +
-                    "RIGHT 782\r\n" +
-                    "T CONSO2.CPF 0 700 " + offsetX + " " + dataModel.getTlxPotLei() + " kWh\r\n";
-            total += dataModel.getTlxPotLei();
-        }
-        if (dataModel.getTlxPotFac() == 2) {
-            offsetX += 30;
-            res += "LEFT\r\n" +
-                    "T CONSO2.CPF 0 40 " + offsetX + " Potencia Facturada\r\n" +
-                    "RIGHT 782\r\n" +
-                    "T CONSO2.CPF 0 700 " + offsetX + " " + dataModel.getTlxPotFac() + " kWh\r\n";
-            total += dataModel.getTlxPotFac();
+                    "T TF01.CPF 0 700 " + offsetX + " " + dataModel.getTlxKwhAdi2() + " kWh\r\n" +
+                    "LINE  35 " + (offsetX - 5) + "  35 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE 787 " + (offsetX - 5) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE  35 " + (offsetX + 25) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "";
         }
 
         offsetX += 30;
         res += "LEFT\r\n" +
                 "T TF01.CPF 0 40 " + offsetX + " Total Energía a Facurar\r\n" +
                 "RIGHT 782\r\n" +
-                "T TF01.CPF 0 700 " + offsetX + " " + total + " kWh\r\n";
-        return Pair.create(res, total);
+                "T TF01.CPF 0 700 " + offsetX + " " + dataModel.getTlxConsFacturado() + " kWh\r\n" +
+                "LINE  35 " + (offsetX - 5) + "  35 " + (offsetX + 25) + " 1\r\n" +
+                "LINE 787 " + (offsetX - 5) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                "LINE  35 " + (offsetX + 25) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                "";
+
+        if (dataModel.getTlxTipDem() == 2) {
+            offsetX += 30;
+            res += "LEFT\r\n" +
+                    "T TF01.CPF 0 40 " + offsetX + " Potencia Leida\r\n" +
+                    "RIGHT 782\r\n" +
+                    "T TF01.CPF 0 700 " + offsetX + " " + dataModel.getTlxPotLei() + " kWh\r\n" +
+                    "LINE  35 " + (offsetX - 5) + "  35 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE 787 " + (offsetX - 5) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE  35 " + (offsetX + 25) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "";
+        }
+        if (dataModel.getTlxPotFac() == 2) {
+            offsetX += 30;
+            res += "LEFT\r\n" +
+                    "T TF01.CPF 0 40 " + offsetX + " Potencia Facturada\r\n" +
+                    "RIGHT 782\r\n" +
+                    "T TF01.CPF 0 700 " + offsetX + " " + dataModel.getTlxPotFac() + " kWh\r\n" +
+                    "LINE  35 " + (offsetX - 5) + "  35 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE 787 " + (offsetX - 5) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "LINE  35 " + (offsetX + 25) + " 787 " + (offsetX + 25) + " 1\r\n" +
+                    "";
+        }
+        return Pair.create(res, dataModel.getTlxConsFacturado());
+    }
+
+    public static String mas3dias(String fecha) {
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, fecha));
+        instance.add(Calendar.DATE, 3);
+        return StringUtils.formateDateFromstring(StringUtils.DATE_FORMAT, instance.getTime());
+    }
+
+    public static String cuadros() {
+        String cuadro = "LEFT\r\n" +
+                // lineas horiontales
+                "LINE 35 355 787 355 1\r\n" +
+                "LINE 35 385 787 385 1\r\n" +
+                "LINE 35 415 787 415 1\r\n" +
+                "LINE 35 445 787 445 1\r\n" +
+                "LINE 35 475 787 475 1\r\n" +
+
+                // lineas vertiales
+                "LINE  35 355  35 475 1\r\n" +
+                "LINE 290 355 290 445 1\r\n" +
+                "LINE 480 355 480 445 1\r\n" +
+                "LINE 610 355 610 445 1\r\n" +
+                "LINE 787 355 787 475 1\r\n" +
+                "";
+        return cuadro;
     }
 }

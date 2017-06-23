@@ -278,7 +278,7 @@ public class PrintGenerator {
         String year = split[0];
         String month = split[1];
         String day = split[2];
-        return day + "-" + mesString(Integer.parseInt(month)).toUpperCase().substring(0, 3) + "-" + year.substring(2);
+        return day + "-" + mesString(Integer.parseInt(month)).toUpperCase().substring(0, 3).toLowerCase() + "-" + year.substring(2);
     }
 
     private static String formatedDatePrint(String fecha) {

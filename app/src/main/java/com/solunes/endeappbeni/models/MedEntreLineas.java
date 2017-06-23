@@ -39,6 +39,7 @@ public class MedEntreLineas {
     }
 
     public enum Columns {
+        id,
         MelRem,
         MelMed,
         MelLec,

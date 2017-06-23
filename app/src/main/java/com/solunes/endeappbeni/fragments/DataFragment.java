@@ -173,7 +173,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         TextView nameData = (TextView) view.findViewById(R.id.data_name);
         nameData.setText(data.getTlxNom());
         TextView dataClient = (TextView) view.findViewById(R.id.data_client);
-        dataClient.setText("N° Consumidor: " + data.getTlxCli() + "-" + data.getTlxDav());
+        dataClient.setText("N° Consumidor: " + data.getTlxCli());
         TextView adressCliente = (TextView) view.findViewById(R.id.adress_client);
         adressCliente.setText(data.getTlxDir());
         TextView categoryCliente = (TextView) view.findViewById(R.id.category_client);
@@ -382,7 +382,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         buttonObs.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // se selecciona una observacion para la lectura, por defecto 104
+                // se selecciona una observacion para la lectura
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
                 alertDialog.setTitle("Selecionar una observación");
                 DBAdapter dbAdapter = new DBAdapter(getContext());
@@ -596,6 +596,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             } else {
                 tipoLectura = 9;
             }
+        } else if (obs.getObsCond() == 6){
+            nuevaLectura = 0;
         }
 
         // correction de obs ind
@@ -635,17 +637,31 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         if (tipoLectura == 5) {
             isPostergado = true;
         }
+
+
+        // calculo de consumo facturado para consumo elevado y bajo
+        int facturado = lecturaKwh;
+        if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3 && tipoLectura != 9) {
+            facturado -= dataModel.getTlxKwhDev();
+            if (facturado < 0) {
+                facturado = 0;
+            }
+        }
+        if (dataModel.getTlxKwhAdi() > 0 && tipoLectura != 3 && tipoLectura != 9) {
+            facturado += dataModel.getTlxKwhAdi();
+        }
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.Theme_Dialog);
         builder.setTitle("Alerta!");
         if (dataModel.getTlxCliNew() == 0) {
-            if (lecturaKwh > (conPro + conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_elevado.name()) / 100))) {
+            if (facturado > (conPro + conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_elevado.name()) / 100))) {
                 message += "\n- Consumo elevado";
                 isAlert = true;
                 autoObs.add(80);
                 if (obsLec(dbAdapter, 80)) {
                     tipoLectura = 5;
                 }
-            } else if (lecturaKwh < (conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_bajo.name()) / 100))) {
+            } else if (facturado < (conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_bajo.name()) / 100))) {
                 message += "\n- Consumo bajo";
                 isAlert = true;
                 autoObs.add(81);
@@ -667,9 +683,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         // Verificacion si el estado de cliente es cortado o suspendido y se introduce el mismo indice al anterior, se posterga
         if (dataModel.getTlxEstCli() == 3 || dataModel.getTlxEstCli() == 5) {
-            if (dataModel.getTlxUltInd() != nuevaLectura) {
+            if (dataModel.getTlxUltInd() == nuevaLectura) {
                 tipoLectura = 5;
                 isPostergado = true;
+            } else {
+                autoObs.add(82);
+                tipoLectura = 4;
             }
         }
 
@@ -836,11 +855,13 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         // correccion de kwh a devolver sino es consumo promedio o lectura estimada
         if (dataModel.getTlxKwhDev() > 0 && tipoLectura != 3 && tipoLectura != 9) {
-            lectura = lectura - dataModel.getTlxKwhDev();
-            if (lectura > 0) {
+            int lectura2 = lectura - dataModel.getTlxKwhDev();
+            if (lectura2 > 0) {
                 dataModel.setTlxKwhDev(0);
+                lectura = lectura2;
             } else {
-                dataModel.setTlxKwhDev(Math.abs(lectura));
+                dataModel.setTlxKwhDev(Math.abs(lectura2));
+                dataModel.setTlxKwhDev2(lectura);
                 lectura = 0;
             }
         }
@@ -940,9 +961,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             cargoExtra = DetalleFactura.crearDetalle(context, dataModel.getId(), itemId, cargoExtra);
             cargosTotal2 += cargoExtra;
         }
-        double importeMesCancelar = dataModel.getTlxImpFac() + cargosTotal2;
-        dataModel.setTlxImpMes(importeMesCancelar);
-        dataModel.setTlxImpTot(GenLecturas.round(importeMesCancelar + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI()));
+        dataModel.setTlxImpMes(GenLecturas.roundDecimal(dataModel.getTlxImpFac() + cargosTotal2, 2));
+        dataModel.setTlxImpTot(GenLecturas.round(dataModel.getTlxImpMes() + dataModel.getTlxDeuEneI() + dataModel.getTlxDeuAseI()));
         dataModel.setTlxCodCon(getControlCode(context, dataModel));
         if (dataModel.getTlxTipLec() != 5) {
             dataModel.setEstadoLectura(estados_lectura.Leido.ordinal());
@@ -1155,6 +1175,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         cv.put(DataModel.Columns.TlxImpTap.name(), dataModel.getTlxImpTap());
         cv.put(DataModel.Columns.TlxImpAse.name(), dataModel.getTlxImpAse());
         cv.put(DataModel.Columns.TlxKwhDev.name(), dataModel.getTlxKwhDev());
+        cv.put(DataModel.Columns.TlxKwhDev2.name(), dataModel.getTlxKwhDev2());
+        cv.put(DataModel.Columns.TlxKwhAdi.name(), dataModel.getTlxKwhAdi());
         cv.put(DataModel.Columns.TlxRecordatorio.name(), dataModel.getTlxRecordatorio());
         cv.put(DataModel.Columns.estado_lectura.name(), dataModel.getEstadoLectura());
 
@@ -1172,10 +1194,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         ContentValues cv;
         DBAdapter dbAdapter = new DBAdapter(getContext());
         for (Integer idObs : obsArray) {
-            cv = new ContentValues();
-            cv.put(DataObs.Columns.general_id.name(), dataModel.getId());
-            cv.put(DataObs.Columns.observacion_id.name(), idObs);
-            dbAdapter.saveObject(DBHelper.DATA_OBS_TABLE, cv);
+            if (idObs != 104) {
+                cv = new ContentValues();
+                cv.put(DataObs.Columns.general_id.name(), dataModel.getId());
+                cv.put(DataObs.Columns.observacion_id.name(), idObs);
+                dbAdapter.saveObject(DBHelper.DATA_OBS_TABLE, cv);
+            }
         }
         dbAdapter.close();
     }
@@ -1311,7 +1335,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             estadoMedidor.setTextColor(getResources().getColor(R.color.colorPrint));
             buttonConfirm.setText(R.string.re_print);
             buttonPostergar.setText(R.string.postergar_impresion);
-            if (isEnabledbuttonPostergar){
+            if (isEnabledbuttonPostergar) {
                 buttonPostergar.setEnabled(false);
             }
             inputReading.setEnabled(false);
@@ -1372,15 +1396,17 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         linearLayoutObs.removeAllViews();
         DBAdapter dbAdapter = new DBAdapter(getContext());
         for (Integer idObs : obsArray) {
-            Cursor cursor = dbAdapter.getObs(idObs);
-            Obs obs = Obs.fromCursor(cursor);
-            cursor.close();
-            View inflate = LayoutInflater.from(getContext()).inflate(R.layout.item_single_choice, null);
-            TextView itemCode = (TextView) inflate.findViewById(R.id.item_code);
-            TextView itemTitle = (TextView) inflate.findViewById(R.id.item_title);
-            itemCode.setText("" + obs.getId());
-            itemTitle.setText(obs.getObsDes());
-            linearLayoutObs.addView(inflate);
+            if (idObs != 104) {
+                Cursor cursor = dbAdapter.getObs(idObs);
+                Obs obs = Obs.fromCursor(cursor);
+                cursor.close();
+                View inflate = LayoutInflater.from(getContext()).inflate(R.layout.item_single_choice, null);
+                TextView itemCode = (TextView) inflate.findViewById(R.id.item_code);
+                TextView itemTitle = (TextView) inflate.findViewById(R.id.item_title);
+                itemCode.setText("" + obs.getId());
+                itemTitle.setText(obs.getObsDes());
+                linearLayoutObs.addView(inflate);
+            }
         }
         dbAdapter.close();
     }
