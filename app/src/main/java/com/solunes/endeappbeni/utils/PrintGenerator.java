@@ -1,5 +1,6 @@
 package com.solunes.endeappbeni.utils;
 
+import android.net.ParseException;
 import android.util.Log;
 
 import com.solunes.endeappbeni.models.DataModel;
@@ -8,6 +9,7 @@ import com.solunes.endeappbeni.models.Historico;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Clases para generar el string de la impresion
@@ -222,13 +224,16 @@ public class PrintGenerator {
      * @param dateLec fecha actual
      * @return retorna la camtidad de dias entre 27 a 33 dias, si esta fuera de ese intervalo retorna '--'
      */
-    public static int calcDays(String dateAnt, String dateLec) {
-        Calendar calendarAnt = Calendar.getInstance();
-        calendarAnt.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateAnt));
-        Calendar calendarLec = Calendar.getInstance();
-        calendarLec.setTime(StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateLec));
-
-        return calendarAnt.getActualMaximum(Calendar.DAY_OF_MONTH) - calendarAnt.get(Calendar.DAY_OF_MONTH) + calendarLec.get(Calendar.DAY_OF_MONTH);
+    static long calcDays(String dateAnt, String dateLec) {
+        try {
+            Date date1 = StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateAnt);
+            Date date2 = StringUtils.formateStringFromDate(StringUtils.DATE_FORMAT, dateLec);
+            long diff = date2.getTime() - date1.getTime();
+            return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+        } catch (ParseException e) {
+            Log.e(TAG, "calcDays: " + e.getMessage(), e);
+        }
+        return 0;
     }
 
     /**

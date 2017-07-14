@@ -576,6 +576,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             return;
         }
         nuevaLectura = correccionDeDigitos(nuevaLectura, dataModel.getTlxDecEne());
+        int lecturaOriginal = nuevaLectura;
 
         // condicionante de observacion 1
         if (obs.getObsCond() == 1) {
@@ -596,7 +597,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             } else {
                 tipoLectura = 9;
             }
-        } else if (obs.getObsCond() == 6){
+        } else if (obs.getObsCond() == 6) {
             nuevaLectura = 0;
         }
 
@@ -683,12 +684,17 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         // Verificacion si el estado de cliente es cortado o suspendido y se introduce el mismo indice al anterior, se posterga
         if (dataModel.getTlxEstCli() == 3 || dataModel.getTlxEstCli() == 5) {
-            if (dataModel.getTlxUltInd() == nuevaLectura) {
+            if (obs.getObsTip() == 1) {
                 tipoLectura = 5;
                 isPostergado = true;
             } else {
-                autoObs.add(82);
-                tipoLectura = 4;
+                if (dataModel.getTlxUltInd() == lecturaOriginal) {
+                    tipoLectura = 5;
+                    isPostergado = true;
+                } else {
+                    autoObs.add(82);
+                    tipoLectura = 4;
+                }
             }
         }
 
@@ -697,12 +703,12 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
         // Verificar y obtener la lectura inicial cuando sea requerida
-        if (obs.getObsInd() == 0 && input.equals("0")) {
+        if (obs.getObsInd() == 0 && lecturaOriginal == 0) {
             isAlert = true;
             message += "\nEl índice introducido será 0";
         }
 
-        message += "\n\n¿Es correcto el índice " + input + "?";
+        message += "\n\n¿Es correcto el índice " + lecturaOriginal + "?";
         builder.setMessage(message);
 
         final int finalLecturaKwh = lecturaKwh;
