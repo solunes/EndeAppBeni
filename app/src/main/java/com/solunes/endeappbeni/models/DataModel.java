@@ -281,7 +281,7 @@ public class DataModel {
         } else if (idTipo == 4) {
             return "Último índice";
         } else if (idTipo == 5) {
-            return "No existe";
+            return "Postergado";
         } else if (idTipo == 6) {
             return "Lectura ajustada";
         } else if (idTipo == 9 ){

@@ -169,7 +169,8 @@ public class DBAdapter {
     public ArrayList<DataModel> getAllData() {
         open();
         ArrayList<DataModel> dataModels = new ArrayList<>();
-        Cursor query = db.query(DBHelper.DATA_TABLE, null, null, null, null, null, DataModel.Columns.TlxOrdTpl.name() + " ASC");
+        Cursor query = db.query(DBHelper.DATA_TABLE, null, null, null, null, null, "CASE WHEN " + DataModel.Columns.TlxEstado.name() + " = 3 THEN 1 ELSE 0 END ASC, " +
+                DataModel.Columns.TlxOrdTpl.name() + " ASC");
         while (query.moveToNext()) {
             dataModels.add(DataModel.fromCursor(query));
         }
@@ -220,7 +221,7 @@ public class DBAdapter {
         ArrayList<DataModel> dataModels = new ArrayList<>();
 
         String rawQuery = "SELECT * FROM " + DBHelper.DATA_TABLE +
-                " WHERE " + DataModel.Columns.estado_lectura.name() + makeInQueryString(state.length, state) + " ORDER BY " + DataModel.Columns.TlxImpAvi.name() + " ASC";
+                " WHERE " + DataModel.Columns.estado_lectura.name() + makeInQueryString(state.length, state) + " ORDER BY " + DataModel.Columns.TlxOrdTpl.name() + " ASC";
         Cursor query = db.rawQuery(rawQuery, null);
 
         while (query.moveToNext()) {
@@ -559,11 +560,11 @@ public class DBAdapter {
             cursor.close();
             cursor = db.query(DBHelper.PRINT_OBS_DATA_TABLE, null,
                     PrintObsData.Columns.observacion_imp_id.name() + " = 6", null, null, null, null);
-            items.add(new StatisticsItem("Facturas no entregadas", cursor.getCount()));
+            items.add(new StatisticsItem("Avisos no entregados", cursor.getCount()));
             cursor.close();
             cursor = db.query(DBHelper.PRINT_OBS_DATA_TABLE, null,
                     "not " + PrintObsData.Columns.observacion_imp_id.name() + " = 6", null, null, null, null);
-            items.add(new StatisticsItem("Facturas reimpresas", cursor.getCount()));
+            items.add(new StatisticsItem("Avisos reimpresos", cursor.getCount()));
             cursor.close();
         }
         if (param == 2) {
@@ -872,7 +873,7 @@ public class DBAdapter {
     public ArrayList<DataModel> getAllDataToSend() {
         open();
         ArrayList<DataModel> dataModels = new ArrayList<>();
-        Cursor query = db.query(DBHelper.DATA_TABLE, null, "NOT " + DataModel.Columns.estado_lectura.name() + " = " + DataFragment.estados_lectura.Pendiente.ordinal() + " AND " +
+        Cursor query = db.query(DBHelper.DATA_TABLE, null, DataModel.Columns.estado_lectura.name() + " IN (" + DataFragment.estados_lectura.Leido.ordinal() + "," + DataFragment.estados_lectura.Postergado.ordinal() + ") AND " +
                 DataModel.Columns.enviado.name() + " = " + DataModel.EstadoEnviado.no_enviado.ordinal(), null, null, null, DataModel.Columns.TlxOrdTpl.name() + " ASC");
         while (query.moveToNext()) {
             dataModels.add(DataModel.fromCursor(query));

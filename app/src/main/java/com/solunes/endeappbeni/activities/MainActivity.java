@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.postDelayed(handlerTask, interval * 1000 * 60);
             }
         };
-        if (user.getLecNiv() != 3) {
+        if (interval > 1 && user.getLecNiv() != 3) {
             handlerTask.run();
         }
         adapter.close();
@@ -270,6 +270,12 @@ public class MainActivity extends AppCompatActivity {
     public void sendReading(final View view) {
         if (!wasDownload) {
             Snackbar.make(view, "No se han descargado las lecturas", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        DBAdapter adapter = new DBAdapter(this);
+        user = adapter.getUser(UserPreferences.getInt(this, LoginActivity.KEY_LOGIN_ID));
+        if (user.getLecNiv() == 3) {
+            Snackbar.make(view, "Un equipo de soporte no puede subir lecturas", Snackbar.LENGTH_SHORT).show();
             return;
         }
         final ProgressDialog progressDialog = new ProgressDialog(this);

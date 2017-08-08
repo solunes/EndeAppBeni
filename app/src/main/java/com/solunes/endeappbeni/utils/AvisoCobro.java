@@ -99,7 +99,7 @@ public class AvisoCobro {
                 "T TF01.CPF 0 40 100 -------------------------------------------------------------------------------------------------------------\r\n" +
                 "T TF01.CPF 0 40 120 Fecha Emisión: \r\n" +
                 "CENTER\r\n" +
-                "T TF01.CPF 0 50 120 " + dataModel.getTlxCiudad() + ", " + getFechaEmi(dataModel.getTlxFecEmi()) + " \r\n" +
+                "T TF01.CPF 0 50 120 " + dataModel.getTlxCiudad() + ", " + getFechaEmi(dataModel.getTlxFecLec()) + " \r\n" +
 
                 "LEFT\r\n" +
                 "T TF01.CPF 0 40 150 Señor (a):  " + dataModel.getTlxNom() + "\r\n" +

@@ -314,7 +314,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     // obtener lectura de energia y verificar digitos
                     String input = inputReading.getText().toString();
                     if (input.length() >= String.valueOf(Integer.MAX_VALUE).length()) {
-                        Snackbar.make(view, "La lectura no puede tener mas de " + dataModel.getTlxNroDig() + " digitos", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(view, "Error en número de dígitos. Verifique y comunique.", Snackbar.LENGTH_SHORT).show();
                     }
                     if (input.isEmpty()) {
                         input = "0";
@@ -362,7 +362,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     if (input.isEmpty()) {
                         AlertDialog.Builder dialog = new AlertDialog.Builder(getContext());
                         dialog.setTitle("Advertencia");
-                        dialog.setMessage("La lectura va ser 0 de consumo.\n¿Esta seguro?");
+                        dialog.setMessage("La lectura va a ser 0 de consumo.\n¿Esta seguro?");
                         dialog.setNegativeButton("Cancelar", null);
                         final int finalTipoLectura = tipoLectura;
                         dialog.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
@@ -436,13 +436,13 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 if (dataModel.getEstadoLectura() == estados_lectura.Leido.ordinal()) {
                     AlertDialog.Builder builder1 = new AlertDialog.Builder(getContext());
                     builder1.setTitle(R.string.confirmar);
-                    builder1.setMessage("¿Esta seguro de no entregar la factura?");
+                    builder1.setMessage("¿Esta seguro de no entregar el aviso?");
                     builder1.setNegativeButton("Cancelar", null);
                     builder1.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             AlertDialog.Builder builder2 = new AlertDialog.Builder(getContext());
-                            builder2.setMessage("¿Esta completamente seguro de no entregar la factura?");
+                            builder2.setMessage("¿Esta completamente seguro de no entregar el aviso?");
                             builder2.setTitle(R.string.confirmar);
                             builder2.setNegativeButton("Cancelar", null);
                             builder2.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
@@ -458,7 +458,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                                     dbAdapter.saveObject(DBHelper.PRINT_OBS_DATA_TABLE, contentValues);
                                     dbAdapter.updateData(dataModel.getId(), cvData);
                                     dbAdapter.close();
-                                    Snackbar.make(view, "Cliente se factura en oficina", Snackbar.LENGTH_SHORT).show();
+                                    Snackbar.make(view, "Aviso se posterga para oficina", Snackbar.LENGTH_SHORT).show();
                                     buttonPostergar.setEnabled(false);
                                 }
                             });
@@ -474,10 +474,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
                     DBAdapter dbAdapter = new DBAdapter(getContext());
                     ContentValues cv = new ContentValues();
+                    onFragmentListener.onAjusteOrden(dataModel.getId());
                     cv.put(DataModel.Columns.estado_lectura.name(), dataModel.getEstadoLectura());
                     dbAdapter.updateData(dataModel.getId(), cv);
                     dbAdapter.close();
-                    onFragmentListener.onAjusteOrden(dataModel.getId());
                     onFragmentListener.onNextPage();
                 }
             }
@@ -513,6 +513,8 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                         autoObs = new ArrayList<>();
                         obsArray = new ArrayList<>();
                         obsArray.add(obs.getId());
+                        notifiDataContainer();
+                        inputReading.setText(String.valueOf(dataModel.getTlxUltInd()));
                         methodPequeñaMedianaDemanda(view, "0", obs.getObsLec(), obs);
                         buttonObsImped.setEnabled(false);
                         buttonObsImped.setTextColor(getResources().getColor(R.color.colorDisableImped));
@@ -540,6 +542,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                         Snackbar.make(view, "No hay esa observación", Snackbar.LENGTH_SHORT).show();
                     }
                     cursor.close();
+                    inputObsCode.setText("");
                 }
             }
         });
@@ -626,9 +629,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         }
 
         // condicionante de observacion 2
-        if (obs.getObsCond() == 2 && indiceIgualado) {
-            lecturaKwh = dataModel.getTlxConPro();
-            tipoLectura = 9;
+        if (obs.getObsCond() == 2) {
+            nuevaLectura = dataModel.getTlxUltInd();
+            lecturaKwh = 0;
+            tipoLectura = 0;
         }
 
         int conPro = dataModel.getTlxConPro();
@@ -638,7 +642,6 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         if (tipoLectura == 5) {
             isPostergado = true;
         }
-
 
         // calculo de consumo facturado para consumo elevado y bajo
         int facturado = lecturaKwh;
@@ -654,7 +657,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.Theme_Dialog);
         builder.setTitle("Alerta!");
-        if (dataModel.getTlxCliNew() == 0) {
+        if (dataModel.getTlxCliNew() == 0 && obs.getObsInd() == 0) {
             if (facturado > (conPro + conPro * (dbAdapter.getParametroValor(Parametro.Values.consumo_elevado.name()) / 100))) {
                 message += "\n- Consumo elevado";
                 isAlert = true;
@@ -678,13 +681,16 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                 message += "\n- Índice igualado";
                 isAlert = true;
                 autoObs.add(50);
+                if (obsLec(dbAdapter, 50)) {
+                    tipoLectura = 5;
+                }
             }
             builder.setNegativeButton("Cancelar", null);
         }
 
         // Verificacion si el estado de cliente es cortado o suspendido y se introduce el mismo indice al anterior, se posterga
         if (dataModel.getTlxEstCli() == 3 || dataModel.getTlxEstCli() == 5) {
-            if (obs.getObsTip() == 1) {
+            if (obs.getObsTip() == 1 || indiceIgualado) {
                 tipoLectura = 5;
                 isPostergado = true;
             } else {
@@ -693,10 +699,23 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
                     isPostergado = true;
                 } else {
                     autoObs.add(82);
-                    tipoLectura = 4;
+                    if(tipoLectura!=5){
+                        tipoLectura = 4;
+                    }
                 }
             }
         }
+
+        // No imprimir si las observaciones automaticas tienen ese parametro
+        /*for (Integer obsId : autoObs) {
+            Cursor cursor = dbAdapter.getObs(obsId);
+            Obs obsItem = Obs.fromCursor(cursor);
+            cursor.close();
+            if(obsItem.getObsFac() == 0) {
+                dataModel.setTlxImpAvi(0);
+            }
+            obsArray.add(obsId);
+        }*/
 
         if (isPostergado) {
             isAlert = false;
@@ -793,6 +812,10 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      * @param view
      */
     private void confirmarLectura(int finalTipoLectura, int finalNuevaLectura, int finalLecturaKwh, Obs obs, View view) {
+
+        obsArray.addAll(autoObs);
+        notifiDataContainer();
+
         Log.e(TAG, "confirmarLectura: calculo");
         int potenciaLeida = 0;
         if (!inputPotenciaReading.getText().toString().isEmpty()) {
@@ -1196,7 +1219,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
     }
 
     private void saveAutoObs() {
-        obsArray.addAll(autoObs);
+        //obsArray.addAll(autoObs);
         ContentValues cv;
         DBAdapter dbAdapter = new DBAdapter(getContext());
         for (Integer idObs : obsArray) {
@@ -1215,7 +1238,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
      */
     private void printFactura(View view) {
         if (dataModel.getTlxTipDem() == 3) {
-            Snackbar.make(view, "No se imprime factura", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(view, "No se imprime aviso", Snackbar.LENGTH_LONG).show();
             return;
         }
         if (dataModel.getTlxImpAvi() == 1) {
@@ -1223,7 +1246,7 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
         } else {
             printTitles = new ArrayList<>();
             printValues = new ArrayList<>();
-            Snackbar.make(view, "No se imprime factura", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(view, "No se imprime aviso", Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -1359,6 +1382,9 @@ public class DataFragment extends Fragment implements DatePickerDialog.OnDateSet
             buttonObs.setVisibility(View.GONE);
             inputObsCode.setEnabled(false);
             inputReading.setEnabled(false);
+            if(dataModel.getTlxNvaLec()>0){
+                inputReading.setText(String.valueOf(dataModel.getTlxNvaLec()));
+            }
             buttonConfirm.setEnabled(false);
             buttonObsAdd.setEnabled(false);
             buttonObsImped.setEnabled(false);

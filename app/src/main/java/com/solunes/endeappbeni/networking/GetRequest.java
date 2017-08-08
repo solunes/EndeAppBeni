@@ -48,7 +48,7 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 
         try {
             urlConnection = (HttpURLConnection) new URL(urlEndpoint).openConnection();
-            int TIMEOUT_VALUE = 10000;
+            int TIMEOUT_VALUE = 30000;
             urlConnection.setReadTimeout(TIMEOUT_VALUE);
             urlConnection.setConnectTimeout(TIMEOUT_VALUE);
             urlConnection.setRequestMethod("GET");

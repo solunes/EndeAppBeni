@@ -175,7 +175,7 @@ public class ReadingActivity extends AppCompatActivity implements DataFragment.O
         DataModel dataCurrent = dbAdapter.getData(idData);
         dbAdapter.orderPendents(dataCurrent.getTlxOrdTpl());
         if (dataLastSaved == null) {
-            dataCurrent.setTlxOrdTpl(0);
+            dataCurrent.setTlxOrdTpl(1);
         } else {
             dataCurrent.setTlxOrdTpl(dataLastSaved.getTlxOrdTpl() + 1);
         }
